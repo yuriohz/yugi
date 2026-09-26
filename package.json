@@ -1,0 +1,20 @@
+{
+  "name": "writeright-extension",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "WriteRight — anti-slop multilingual rewriting Chrome extension (Manifest V3).",
+  "license": "MIT",
+  "scripts": {
+    "build": "node build.js",
+    "test": "node --test \"tests/unit/**/*.test.js\"",
+    "test:browser": "node --test \"tests/browser/**/*.test.js\"",
+    "lint": "node tools/lint.js",
+    "scan:secrets": "node tools/scan-secrets.js",
+    "package": "node tools/package.js",
+    "verify": "npm run lint && npm run scan:secrets && npm run build && npm test"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.2"
+  }
+}

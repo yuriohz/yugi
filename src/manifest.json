@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "WriteRight — AI Writing Assistant",
+  "version": "2.0.0",
+  "description": "Rewrite, review and proofread anywhere you type, in English or Arabic, using your own OpenRouter key.",
+  "minimum_chrome_version": "114",
+  "homepage_url": "https://github.com/yuriohz/yugi",
+  "permissions": ["storage", "activeTab", "scripting"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "WriteRight",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ],
+  "options_page": "options.html",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
