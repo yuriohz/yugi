@@ -11,6 +11,8 @@ import { TASKS, LIMITS } from '../core/constants.js';
 import { composeSystemPrompt, composeUserMessage } from '../core/prompts.js';
 import { schemaDescriptionFor } from '../core/task-schemas.js';
 import { detectSlop } from '../core/slop-detector.js';
+import { OPERATION, GUARDRAILS, LENGTH, lengthInstruction } from '../core/modes.js';
+import { enforceGuardrails } from '../core/guardrails.js';
 import { ApiError } from './openrouter.js';
 
 const builders = Object.create(null);
@@ -139,4 +141,103 @@ export function validateIssues(issues, text, protectedTerms = []) {
 /** Local pre-flight hints shared by the generative tasks. */
 export function preflightFindings(text, { protectedTerms = [], script = 'auto' } = {}) {
   return detectSlop(text, { protectedTerms, script, includeAdvisory: false, maxFindings: 40 });
+}
+
+// ------------------------------------------------------------------ rewrite
+
+registerTask(TASKS.REWRITE, ({ text, model, plan, profile, localeLayer, platform, mode, options = {} }) => {
+  if (!mode) throw new ApiError('No mode was selected for this rewrite.', { code: 'no_mode' });
+  if (mode.operation && mode.operation !== OPERATION.REWRITE) {
+    throw new ApiError(`“${mode.name}” is a ${mode.operation} mode and cannot be used for a rewrite.`, { code: 'wrong_operation' });
+  }
+
+  const protectedTerms = [...(profile?.protectedTerms || []), ...(options.protectedTerms || [])];
+  const script = options.script || 'auto';
+  const findings = preflightFindings(text, { protectedTerms, script });
+  const length = options.length || mode.controls?.defaultLength || LENGTH.SAME;
+
+  const modeLayer = [mode.instruction, '', lengthInstruction(length), '', guardrailLayer(mode.guardrails)]
+    .filter(Boolean).join('\n');
+
+  const system = composeSystemPrompt({
+    mode: modeLayer,
+    profile,
+    locale: localeLayer,
+    platform,
+    findings,
+    hasUntrustedData: Boolean(options.untrustedBlocks?.length),
+    output: {
+      schemaDescription: schemaDescriptionFor(TASKS.REWRITE),
+      notes: [
+        'Return the rewritten text in "proposal". Nothing else goes in that field.',
+        'If you cannot preserve the meaning, set "meaningChanged" to true and explain why in "warnings".',
+        'If a passage is hollow because it lacks facts, say so in "warnings". Never fill the gap yourself.'
+      ]
+    }
+  });
+
+  return {
+    timeoutMs: LIMITS.REQUEST_TIMEOUT_MS,
+    context: { text, protectedTerms, mode, arabic: script === 'arabic' || script === 'both' },
+    body: baseBody({
+      model,
+      plan,
+      temperature: 0.3,
+      messages: [
+        { role: 'system', content: system },
+        {
+          role: 'user',
+          content: composeUserMessage({
+            text,
+            instruction: `Apply the ${mode.name} mode to the text below.`,
+            untrustedBlocks: options.untrustedBlocks || []
+          })
+        }
+      ]
+    }),
+    postProcess: (value, context) => {
+      const guard = enforceGuardrails({
+        guardrails: context.mode.guardrails,
+        original: context.text,
+        proposal: value.proposal,
+        protectedTerms: context.protectedTerms,
+        arabic: context.arabic
+      });
+      return {
+        ...value,
+        modeId: context.mode.id,
+        length,
+        guardrails: {
+          ok: guard.ok,
+          blocked: guard.blocked,
+          violations: guard.violations
+        },
+        fidelity: {
+          ok: guard.fidelity.ok,
+          missing: guard.fidelity.missing.map(f => ({ kind: f.kind, label: f.label, raw: f.raw })),
+          added: guard.fidelity.added.map(f => ({ kind: f.kind, label: f.label, raw: f.raw })),
+          namesLost: guard.fidelity.namesLost
+        },
+        checks: guard.evaluation.checks,
+        // The user must always confirm. Never auto-applied, by contract.
+        autoApply: false
+      };
+    }
+  };
+});
+
+/** Render the mode's declared guardrails into the prompt so the model sees them too. */
+export function guardrailLayer(guardrails = []) {
+  if (!guardrails.length) return '';
+  const lines = ['## Guardrails for this mode'];
+  const text = {
+    [GUARDRAILS.PRESERVE_FACTS]: 'Every number, name, date, URL and commitment in the source must appear unchanged in the proposal.',
+    [GUARDRAILS.PRESERVE_LENGTH]: 'Stay close to the original length.',
+    [GUARDRAILS.PRESERVE_POSITION]: 'Never reverse the writer’s answer. A refusal stays a refusal; agreement stays agreement.',
+    [GUARDRAILS.NO_WEB]: 'Do not use or refer to web results. You have none.',
+    [GUARDRAILS.CITATION_REQUIRED]: 'Every claim marked supported must cite a source you were given.',
+    [GUARDRAILS.NEVER_AUTO_APPLY]: 'The user reviews this before anything is applied. Present a proposal, not a finished act.'
+  };
+  for (const g of guardrails) if (text[g]) lines.push(`- ${text[g]}`);
+  return lines.length > 1 ? lines.join('\n') : '';
 }

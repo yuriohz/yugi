@@ -65,7 +65,12 @@ Status values: `complete`, `in progress`, `blocked`, `not started`.
 
 | Field | Value |
 |---|---|
-| **Status** | not started |
+| **Status** | complete |
+| **Commit** | `86eec69` |
+| **Tests performed** | `npm run verify`; 203 unit assertions total. New: `fidelity.test.js` (16), `modes.test.js` (20), `rewrite-task.test.js` (12) driving a full rewrite through the router with a fake transport. |
+| **Acceptance criteria** | ✅ Exactly five built-in modes exist, are frozen (`Object.freeze` push throws), and are duplicable into editable copies without mutating the original. ✅ Each rewrite mode carries an explicit `Must not:` list of at least four prohibitions, asserted per mode against the product plan. ✅ The fidelity checker extracts numbers, currency, percentages, dates, times, URLs, emails, @handles, identifiers, inline code and proper nouns, and flags dropped or invented instances — including Arabic-Indic digits and Arabic orthographic variants. ✅ Guardrail violations surface as warnings and block apply: dropped facts, invented deadlines, reversed positions and prohibited assurance language all set `blocked: true`; length drift and dropped proper nouns warn without blocking. ✅ `autoApply` is `false` on every rewrite result. |
+| **Remaining issues** | Proper-noun extraction is deliberately approximate, so dropped names are reported as a risk rather than an error. The position-flip detector is narrow by design: it catches explicit reversals in English and Arabic, not subtle softening. |
+| **Evidence** | `rewrite-task.test.js` asserts prompt layer ordering end to end (safety → fidelity → anti-slop → mode → guardrails → response contract), Egyptian Arabic for Casual, MSA for Polite, British English by default, and plain-text platform constraints reaching the prompt. |
 
 ### Run 5 — Multilingual: British English, MSA, Egyptian Arabic, RTL
 

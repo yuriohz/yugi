@@ -20,6 +20,8 @@ import { capabilitiesFor, planRequest, fitsContext } from '../core/model-compat.
 import { chatCompletion, ApiError } from './openrouter.js';
 import { buildRequest } from './tasks.js';
 import { getModelCapabilities } from './model-catalogue.js';
+import { resolveMode, resolveProfile, applySiteRules } from './resolve.js';
+import { localeLayerFor } from '../core/locale.js';
 
 /** requestId -> AbortController */
 const inFlight = new Map();
@@ -101,8 +103,26 @@ export async function runTask(payload = {}, deps = {}) {
     );
   }
 
+  // Resolve mode, profile, locale and platform before composing the prompt.
+  const siteRule = applySiteRules(
+    deps.profile || await resolveProfile(payload.profileId, { area: deps.area, profiles: deps.profiles, settings }),
+    payload.origin
+  );
+  const profile = deps.profile
+    || await resolveProfile(payload.profileId || siteRule.profileId, { area: deps.area, profiles: deps.profiles, settings });
+  const mode = deps.mode !== undefined
+    ? deps.mode
+    : await resolveMode(payload.modeId || siteRule.modeId || settings.defaultModeId, { area: deps.area, customModes: deps.customModes });
+
+  const localeLayer = deps.localeLayer !== undefined
+    ? deps.localeLayer
+    : localeLayerFor({ text, settings, profile, mode });
+
   const build = deps.buildRequest || buildRequest;
-  const request = await build({ ...payload, model, settings, plan, capabilities: caps });
+  const request = await build({
+    ...payload, model, settings, plan, capabilities: caps, mode, profile, localeLayer,
+    platform: payload.platform || null
+  });
 
   const controller = new AbortController();
   if (requestId) inFlight.set(requestId, controller);
