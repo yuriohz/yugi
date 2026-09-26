@@ -1,0 +1,5 @@
+const defaults={provider:'openrouter',endpoint:'https://openrouter.ai/api/v1/chat/completions',model:'openai/gpt-4o-mini',language:'English',enabled:true};
+const ids=['endpoint','apiKey','model','language','enabled'];
+(async()=>{const s=await chrome.storage.local.get(defaults);ids.forEach(id=>{const el=document.getElementById(id);if(el.type==='checkbox')el.checked=s[id];else el.value=s[id]||'';});})();
+document.getElementById('reveal').onclick=()=>{const input=document.getElementById('apiKey');input.type=input.type==='password'?'text':'password';document.getElementById('reveal').textContent=input.type==='password'?'Show':'Hide';};
+document.getElementById('save').onclick=async()=>{const values={};ids.forEach(id=>{const el=document.getElementById(id);values[id]=el.type==='checkbox'?el.checked:el.value.trim();});if(!values.endpoint||!values.model){document.getElementById('status').textContent='Endpoint and model are required.';return;}await chrome.storage.local.set(values);const status=document.getElementById('status');status.textContent='Saved';setTimeout(()=>status.textContent='',1800);};
