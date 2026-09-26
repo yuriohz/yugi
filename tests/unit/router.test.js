@@ -145,10 +145,15 @@ test('text beyond the model context window is refused before the call', async ()
   assert.equal(fetchImpl.calls.length, 0);
 });
 
-test('an unimplemented task fails loudly instead of returning something plausible', async () => {
-  const fetchImpl = forbiddenFetch('not implemented');
+test('every declared task has a builder, so none can silently fall through', async () => {
+  const { registeredTasks } = await import('../../src/background/tasks.js');
+  assert.deepEqual(registeredTasks().sort(), Object.values(TASKS).sort());
+});
+
+test('a task with no builder fails loudly instead of returning something plausible', async () => {
+  const { buildRequest } = await import('../../src/background/tasks.js');
   await assert.rejects(
-    () => runTask({ task: TASKS.READER_REACTION, text: 'hello there' }, { ...base, settings, fetchImpl }),
+    () => buildRequest({ task: 'summarise_everything' }),
     e => e.code === 'not_implemented'
   );
 });
