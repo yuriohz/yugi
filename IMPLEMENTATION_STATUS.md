@@ -87,7 +87,12 @@ Status values: `complete`, `in progress`, `blocked`, `not started`.
 
 | Field | Value |
 |---|---|
-| **Status** | not started |
+| **Status** | complete |
+| **Commit** | `d9625a7` |
+| **Tests performed** | `npm run verify`; 272 unit assertions total. New: `review.test.js` (18), including four end-to-end runs through the router with a fake transport. |
+| **Acceptance criteria** | ✅ Logic-only review performs exactly one call and offers no tools, asserted by call count and by `body.tools === undefined`, even when the model supports tools. ✅ Output separates findings into error / risk / improvement with counts, and each claim carries a verification status. ✅ Calibration only ever downgrades: a factual claim cannot be `supported` without evidence, citations in a sourceless review are removed, and an overall `supported` verdict is downgraded when unchecked factual claims are present. ✅ Banned certainty phrasing is stripped sentence by sentence and reported as a correction; `findCertaintyClaims` returns empty on the corrected result. ✅ The review sets `producesRewrite: false` — the improved response is a separate, explicit step. |
+| **Remaining issues** | Certainty stripping is sentence-granular, so a certainty phrase embedded mid-sentence removes the whole sentence. That is the safe direction, and the removal is reported to the user. |
+| **Evidence** | `REVIEW_INSTRUCTION` asserted to cover internal consistency, causal chain, unstated assumptions, missing constraints, terminology, supplied calculations, and whether the text answers the message it replies to. |
 
 ### Run 7 — Researched Technical Review with OpenRouter web search
 

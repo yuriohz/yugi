@@ -15,6 +15,7 @@ import { detectLocalIssues, mergeIssues } from '../core/local-issues.js';
 import { resolveLocale } from '../core/locale.js';
 import { OPERATION, GUARDRAILS, LENGTH, lengthInstruction } from '../core/modes.js';
 import { enforceGuardrails } from '../core/guardrails.js';
+import { REVIEW_INSTRUCTION, calibrateReview } from '../core/review.js';
 import { ApiError } from './openrouter.js';
 
 const builders = Object.create(null);
@@ -254,3 +255,49 @@ export function guardrailLayer(guardrails = []) {
   for (const g of guardrails) if (text[g]) lines.push(`- ${text[g]}`);
   return lines.length > 1 ? lines.join('\n') : '';
 }
+
+// ------------------------------------------------------- review (logic only)
+
+registerTask(TASKS.REVIEW, ({ text, model, plan, profile, localeLayer, platform, options = {} }) => {
+  const protectedTerms = profile?.protectedTerms || [];
+
+  const system = composeSystemPrompt({
+    mode: REVIEW_INSTRUCTION,
+    profile,
+    locale: localeLayer,
+    platform,
+    hasUntrustedData: Boolean(options.untrustedBlocks?.length),
+    output: {
+      schemaDescription: schemaDescriptionFor(TASKS.REVIEW),
+      notes: [
+        'You have no sources in this task. Every factual claim about the outside world is needs_verification.',
+        'Do not include a rewrite. Do not include a "proposal" field.'
+      ]
+    }
+  });
+
+  return {
+    timeoutMs: LIMITS.REQUEST_TIMEOUT_MS,
+    context: { text, protectedTerms },
+    // A logic-only review must not be given tools, whatever the model supports.
+    body: baseBody({
+      model,
+      plan: { ...plan, useTools: false },
+      temperature: 0.1,
+      messages: [
+        { role: 'system', content: system },
+        {
+          role: 'user',
+          content: composeUserMessage({
+            text,
+            instruction: options.question
+              ? `Review the text below. It is a reply to: ${String(options.question).slice(0, 600)}`
+              : 'Review the reasoning in the text below.',
+            untrustedBlocks: options.untrustedBlocks || []
+          })
+        }
+      ]
+    }),
+    postProcess: value => calibrateReview(value, { hasEvidence: false })
+  };
+});
