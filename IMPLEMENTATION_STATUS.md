@@ -109,7 +109,12 @@ Status values: `complete`, `in progress`, `blocked`, `not started`.
 
 | Field | Value |
 |---|---|
-| **Status** | not started |
+| **Status** | complete |
+| **Commit** | `5a6e864` |
+| **Tests performed** | `npm run verify`; 347 unit assertions total. New: `profiles.test.js` (25), `transfer.test.js` (22). |
+| **Acceptance criteria** | ✅ Profiles validate name, audience, relationship, voice description, formality and directness scales, greeting, sign-off, preferred/blocked/protected terms, voice samples and per-site rules. Control characters are stripped from every text field before it can reach a prompt. ✅ Contradictions are refused: a term cannot be both preferred and blocked, or protected and blocked. ✅ Voice description reports measured counts with an explicit `basis` line stating they are counts, not a judgement. ✅ Dictionary entries are scoped global / per-profile / per-site, support case sensitivity, are capped, and suppress matching issues. ✅ **Export never contains the API key**: it is deleted explicitly, `apikey`/`token`/`secret`/`password`/`history` are stripped at any depth, settings are exported from a whitelist, and every remaining string value is credential-redacted. The exported file states this promise in its own `notice` field. ✅ **Import never writes a credential**, rejects non-https endpoints, drops unknown fields, neutralises prototype pollution, refuses foreign/oversized/newer-version files with a specific reason, and reports what it will replace before anything is written. |
+| **Remaining issues** | Voice samples are capped at 5 × 1,200 characters to bound prompt size. Longer samples are truncated rather than rejected, and the truncation is reported. |
+| **Evidence** | `planImport` is pure — asserted to write nothing to storage. `applyImport` preserves an existing API key rather than overwriting or clearing it, also asserted. |
 
 ### Run 9 — Saved prompts, custom modes, and mode testing
 
