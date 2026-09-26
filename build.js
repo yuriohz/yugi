@@ -29,6 +29,7 @@ const STATIC_FILES = [
   ['manifest.json', 'manifest.json'],
   ['content/content.css', 'content.css'],
   ['ui/popup.html', 'popup.html'],
+  ['ui/popup.css', 'popup.css'],
   ['ui/options.html', 'options.html'],
   ['ui/options.css', 'options.css'],
   ['ui/onboarding.html', 'onboarding.html'],

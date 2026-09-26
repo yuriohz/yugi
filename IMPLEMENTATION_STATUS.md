@@ -205,16 +205,25 @@ Status values: `complete`, `in progress`, `blocked`, `not started`.
 | **Package** | `release/writeright-ai-writing-assistant-2.0.0.zip` · SHA-256 `54040bc9409422d57d6d30cf7457c04fea520291fb839b0a27245095eabdb633` |
 | **Doc corrections made** | `PRODUCT_PLAN_V2.md` §3 rewritten: it named `haidrrrry/humanize-ai-writing` as the anti-slop basis, which the user superseded with `petergyang/no-ai-slop`. The old reference is now recorded in `THIRD_PARTY_NOTICES.md` as referenced-but-not-included. `README.md` rewritten to describe the shipped runtime rather than v1 plus mockups, and its stale `writeright-extension.zip` link removed. `PRIVACY_POLICY.md` rewritten for v2. `STORE_LISTING.md` rewritten and its unusable screenshots flagged. Stale `arena/01a0dbec-yugi` branch references corrected across three files. |
 
+### UI wiring — chrome surfaces speak v2
+
+| Field | Value |
+|---|---|
+| **Status** | complete |
+| **Why this existed** | PR #2 rebuilt the engine but copied the v1 popup, options and onboarding pages unchanged. They still sent `TEST_CONNECTION` / `CHECK_TEXT` and wrote flat `chrome.storage.local` keys, while the worker expected `WR_*` messages and a nested `settings` blob. The five modes were not reachable in the widget. |
+| **Tests performed** | `npm run verify`. New: `ui-render.test.js` (mode launcher, blocked apply, popup copy, escaped proofread cards, calibrated review labels) and `ui-protocol.test.js` (no v1 message types, onboarding uses `WR_TEST_CONNECTION` with `userInitiated`, content script launches rewrite and review). |
+| **Acceptance criteria** | ✅ Popup, options and onboarding read and write through `GET_STATE` / `SET_SETTINGS` / `TEST_CONNECTION`. ✅ Connection test uses `WR_TEST_CONNECTION`. ✅ In-page widget lists all five built-in modes, runs rewrite and technical review, and refuses Replace while a fidelity/guardrail block is unacknowledged. ✅ Shutdown toggles exist in the popup (everywhere / this site / this tab). ✅ Settings expose profiles, custom modes, favourites, dictionary, nearby-context, history, and keyless export. |
+
 ## Final state
 
 | | |
 |---|---|
-| Runs complete | **16 of 16** |
-| Unit assertions | 461, all passing |
+| Runs complete | **16 of 16**, plus UI wiring so chrome surfaces speak v2 |
+| Unit assertions | 472, all passing |
 | Integration journeys | 15, all passing |
-| Lint / secret scan | clean over 136 files |
-| Build | 16 files, 204.3 kB |
-| Package | 17 entries, 68.2 kB, allow-list enforced |
+| Lint / secret scan | clean over 141 files |
+| Build | 17 files, 338.0 kB |
+| Package | allow-list enforced |
 | `npm audit` | 0 vulnerabilities |
 | Blocked | real-browser testing, runtime screenshots, the final name, store submission |
 

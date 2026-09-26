@@ -1,1 +1,49 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><style>*{box-sizing:border-box}body{width:308px;margin:0;color:#252a34;background:#fff;font:13px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}.header{display:flex;align-items:center;justify-content:space-between;padding:17px 18px;border-bottom:1px solid #eceff1}.brand{display:flex;align-items:center;gap:10px}.logo{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:#15c39a;color:#fff;font:italic 800 18px Georgia,serif}.brand strong{display:block;font-size:15px}.brand small{display:block;margin-top:2px;color:#7b838d;font-size:10px}.main{padding:18px}.status{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid #e1e5e8;border-radius:10px;background:#f8faf9}.status-icon{display:grid;place-items:center;width:34px;height:34px;flex:0 0 34px;border-radius:50%;background:#e5f8f2;color:#0b9d7d;font-weight:800}.status strong,.status small{display:block}.status small{margin-top:3px;color:#777f89}.privacy{display:flex;gap:8px;margin:14px 2px 0;color:#747c87;font-size:11px;line-height:1.4}.privacy span{color:#0b9d7d}button{width:100%;margin-top:17px;padding:10px;border:1px solid #bfc5cb;border-radius:7px;background:#fff;color:#303640;font-weight:700;cursor:pointer}button:hover{border-color:#15a986;color:#087e68}</style></head><body><div class="header"><div class="brand"><span class="logo">W</span><div><strong>WriteRight</strong><small>WRITING ASSISTANT</small></div></div></div><div class="main"><div class="status"><span class="status-icon">✓</span><div><strong id="status">Ready to proofread</strong><small id="detail">Writing suggestions are on</small></div></div><div class="privacy"><span>◆</span><div>Your writing is checked only with the AI provider you configure.</div></div><button id="settings">Open settings</button></div><script src="popup.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>WriteRight</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="header">
+    <div class="brand">
+      <span class="logo">W</span>
+      <div>
+        <strong>WriteRight</strong>
+        <small>WRITING ASSISTANT</small>
+      </div>
+    </div>
+  </div>
+  <div class="main">
+    <div class="status" id="card">
+      <span class="status-icon" id="icon">✓</span>
+      <div>
+        <strong id="status">Checking…</strong>
+        <small id="detail">Reading your settings</small>
+      </div>
+    </div>
+    <div class="toggles">
+      <button type="button" class="toggle" id="global" aria-pressed="true">
+        <span>Everywhere<small>When this is off, nothing leaves the browser</small></span>
+        <i></i>
+      </button>
+      <button type="button" class="toggle" id="site" aria-pressed="true">
+        <span>This website<small id="siteLabel">Allow WriteRight on the current site</small></span>
+        <i></i>
+      </button>
+      <button type="button" class="toggle" id="tab" aria-pressed="true">
+        <span>This tab<small>Off lasts until the tab closes</small></span>
+        <i></i>
+      </button>
+    </div>
+    <div class="privacy"><span>◆</span><div>Your key stays on this device. Text is sent only to the OpenRouter model you choose, and only when WriteRight is on.</div></div>
+    <div class="actions">
+      <button type="button" class="secondary" id="settings">Settings</button>
+      <button type="button" class="primary" id="options">Open options</button>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

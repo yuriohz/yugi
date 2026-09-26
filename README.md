@@ -29,7 +29,7 @@
 >
 > | | |
 > |---|---|
-> | Automated tests | ✅ 461 unit + 15 integration assertions, green |
+> | Automated tests | ✅ 472 unit + 15 integration assertions, green |
 > | Build and package | ✅ `npm run package` produces a validated runtime-only ZIP with a SHA-256 |
 > | Real Chrome acceptance testing | ❌ **Not performed.** No browser was available in the build environment. See [`docs/MANUAL_TEST_PLAN.md`](docs/MANUAL_TEST_PLAN.md) |
 > | Runtime screenshots | ❌ **None exist.** Everything in `store-assets/` and `design-v2/` is a mockup and is labelled as such |

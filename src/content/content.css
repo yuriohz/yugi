@@ -39,3 +39,57 @@
 .wr-has-issues{text-decoration-line:underline!important;text-decoration-style:wavy!important;text-decoration-color:#e64b52!important;text-decoration-thickness:1.4px!important;text-underline-offset:3px!important}
 
 #wr-root .wr-summary button[data-undo]{margin-left:6px;color:#626b77}
+
+.wr-panel{width:420px}
+.wr-tabs{gap:16px}
+.wr-tab{color:#74817e;font-weight:650;cursor:pointer}
+.wr-tab:after{display:none;content:"";position:absolute;right:0;bottom:-1px;left:0;height:2px;border-radius:2px;background:#15c39a}
+.wr-tab.active{color:#20242c;font-weight:700}
+.wr-tab.active:after{display:block}
+.wr-toolbar{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 18px 8px;border-bottom:1px solid #eef0f2}
+.wr-toolbar label{display:flex;flex-direction:column;gap:4px;color:#74817e;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.wr-toolbar select{width:100%;padding:6px 8px;border:1px solid #dfe5e2;border-radius:7px;background:#fff;color:#243430;font:12px inherit}
+.wr-modes{display:grid;gap:8px}
+.wr-mode{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:11px 12px 11px 14px;border:1px solid #dfe5e2;border-left:3px solid var(--wr-mode,#12AD89);border-radius:10px;background:#fff;color:#243430;text-align:left;cursor:pointer}
+.wr-mode strong{font-size:13px}
+.wr-mode small{color:#51625e;font-size:12px;font-weight:500}
+.wr-mode:hover{border-color:#cad3d0;box-shadow:0 2px 8px rgba(16,24,40,.06)}
+.wr-mode-on{background:#effbf7;border-color:#12ad89}
+.wr-composer{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.wr-composer-lead{margin:0;color:#51625e;font-size:12px;line-height:1.45}
+.wr-seg{display:flex;gap:6px}
+.wr-seg-btn{flex:1;padding:7px 8px;border:1px solid #dfe5e2;border-radius:7px;background:#fff;color:#51625e;font-size:11px;font-weight:700;cursor:pointer}
+.wr-seg-on{border-color:#12ad89;background:#effbf7;color:#08755f}
+.wr-check{display:flex;align-items:flex-start;gap:8px;color:#51625e;font-size:12px}
+.wr-check input{margin-top:2px}
+.wr-context{margin:0;color:#74817e;font-size:11px;line-height:1.45}
+.wr-primary{padding:10px 12px;border:0;border-radius:8px;background:#12ad89;color:#fff;font-size:13px;font-weight:750;cursor:pointer}
+.wr-primary:hover{background:#0b9377}
+.wr-primary:disabled{background:#cad3d0;cursor:not-allowed}
+.wr-ghost{padding:8px 10px;border:1px solid #dfe5e2;border-radius:7px;background:#fff;color:#51625e;font-size:12px;font-weight:650;cursor:pointer}
+.wr-ghost:hover{border-color:#12ad89;color:#08755f}
+.wr-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-top:12px}
+.wr-compare,.wr-review{display:flex;flex-direction:column;gap:10px}
+.wr-diff{padding:12px;border:1px solid #dfe5e2;border-radius:10px;background:#fff;font-size:13px;line-height:1.55;white-space:pre-wrap}
+.wr-eq{color:#243430}
+.wr-ins{color:#08755f;background:#effbf7;text-decoration:none;font-weight:650}
+.wr-del{color:#d43e48;background:#fff0f1}
+.wr-changed,.wr-claims,.wr-cites,.wr-contra{margin:0;padding-left:18px;color:#51625e;font-size:12px}
+.wr-blocked{padding:12px;border:1px solid #f0b429;border-radius:10px;background:#fff2df;color:#7a4e0b}
+.wr-blocked p{margin:6px 0 10px;font-size:12px}
+.wr-warn{padding:12px;border:1px solid #ead9b3;border-radius:10px;background:#fffaf0;color:#7a4e0b;font-size:12px}
+.wr-warn ul{margin:6px 0 0;padding-left:18px}
+.wr-verdict{padding:12px;border:1px solid #dfe5e2;border-radius:10px;background:#fff}
+.wr-verdict p{margin:6px 0 0;color:#51625e;font-size:12px}
+.wr-direction{margin:0;color:#51625e;font-size:12px}
+.wr-finding{padding:12px 14px}
+.wr-finding.wr-error small{color:#d43e48}
+.wr-finding.wr-risk small{color:#c07816}
+.wr-finding.wr-improvement small{color:#3a65b8}
+.wr-finding blockquote{margin:8px 0 0;padding-left:10px;border-left:2px solid #dfe5e2;color:#74817e;font-size:12px}
+.wr-pill{display:inline-block;margin-right:6px;padding:1px 6px;border-radius:999px;background:#eef4ff;color:#3a65b8;font-size:10px;font-weight:700}
+.wr-foot-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+.wr-panel footer{flex-wrap:wrap;gap:8px}
+.wr-idle i{background:#eef4ff;color:#3a65b8}
+#wr-root[dir="rtl"] .wr-mode{border-left:1px solid #dfe5e2;border-right:3px solid var(--wr-mode,#12AD89)}
+

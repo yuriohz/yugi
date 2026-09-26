@@ -10,12 +10,19 @@
  * (testing a key, refreshing the model list), which are marked `userInitiated`
  * and are the user asking for a call while the extension is otherwise idle.
  */
-import { MESSAGES } from '../core/constants.js';
-import { getSettings } from '../core/storage.js';
+import { MESSAGES, STORAGE_KEYS } from '../core/constants.js';
+import { getSettings, setSettings, getCollection, setCollection } from '../core/storage.js';
 import { isAllowed, setShutdown, clearTabShutdown, getSiteShutdowns, normaliseOrigin, isTabShutdown } from '../core/shutdown.js';
 import { runTask, cancelTask, cancelAll, testConnection } from './router.js';
 import { getCatalogue } from './model-catalogue.js';
-import { record as recordHistory, list as listHistory, clear as clearHistory } from '../core/history.js';
+import { record as recordHistory, list as listHistory, clear as clearHistory, describeHistory } from '../core/history.js';
+import { BUILT_IN_MODES } from '../core/modes.js';
+import { defaultProfiles, validateProfile, upsertProfile, removeProfile } from '../core/profiles.js';
+import { validateCustomMode } from '../core/custom-modes.js';
+import { addFavourite, removeFavourite, isValidModelId } from '../core/favourites.js';
+import { addWord, removeWord } from '../core/dictionary.js';
+import { exportToText, planImport, applyImport } from '../core/transfer.js';
+import { getConsents, setConsent } from '../core/context-consent.js';
 
 chrome.runtime.onInstalled.addListener(details => {
   if (details.reason === 'install') {
@@ -52,16 +59,65 @@ function originOf(sender) {
   return null;
 }
 
+function fail(message, code = 'invalid', extra = {}) {
+  const error = new Error(message);
+  error.code = code;
+  Object.assign(error, extra);
+  throw error;
+}
+
+function withoutKey(settings) {
+  const { apiKey, ...safe } = settings || {};
+  return { settings: safe, hasKey: Boolean(apiKey) };
+}
+
+async function ensureProfiles() {
+  const stored = await getCollection(STORAGE_KEYS.PROFILES, []);
+  if (Array.isArray(stored) && stored.length) return stored;
+  const seeded = defaultProfiles();
+  await setCollection(STORAGE_KEYS.PROFILES, seeded);
+  return seeded;
+}
+
+async function loadSnapshot(origin, tabId) {
+  const settings = await getSettings();
+  const { apiKey, ...safe } = settings;
+  const gate = await isAllowed({ origin, tabId }, { settings });
+  const profiles = await ensureProfiles();
+  const customModes = await getCollection(STORAGE_KEYS.MODES, []);
+  const dictionary = await getCollection(STORAGE_KEYS.DICTIONARY, []);
+  const favouriteModels = await getCollection(STORAGE_KEYS.FAVOURITE_MODELS, []);
+  const historyEntries = await listHistory({ settings });
+  const consents = await getConsents();
+  return {
+    settings: safe,
+    hasKey: Boolean(apiKey),
+    shutdown: {
+      global: settings.enabled === false,
+      website: (await getSiteShutdowns()).includes(normaliseOrigin(origin)),
+      tab: isTabShutdown(tabId),
+      allowed: gate.allowed,
+      blockedBy: gate.blockedBy,
+      reason: gate.reason
+    },
+    profiles,
+    modes: [...BUILT_IN_MODES, ...(Array.isArray(customModes) ? customModes : [])],
+    dictionary: Array.isArray(dictionary) ? dictionary : [],
+    favourites: Array.isArray(favouriteModels) ? favouriteModels : [],
+    history: describeHistory(settings, historyEntries),
+    historyEntries,
+    consents
+  };
+}
+
 const handlers = {
   [MESSAGES.RUN_TASK]: async (msg, sender) => {
-    // runTask re-checks the gate itself; this is the outer, cheaper refusal.
     await requireEnabled(msg, sender);
     return runTask({ ...msg.payload, origin: msg.payload?.origin || originOf(sender) }, { sender });
   },
 
   [MESSAGES.CANCEL_TASK]: async msg => (msg.requestId ? cancelTask(msg.requestId) : cancelAll()),
 
-  // Explicit user actions from the settings and onboarding pages.
   [MESSAGES.TEST_CONNECTION]: async (msg, sender) => {
     await requireEnabled(msg, sender, { allowUserInitiated: true });
     return testConnection(msg.settings);
@@ -71,24 +127,12 @@ const handlers = {
     return getCatalogue(msg.options || {});
   },
 
-  [MESSAGES.GET_STATE]: async (msg, sender) => {
-    const settings = await getSettings();
-    const origin = msg.origin || originOf(sender);
-    const { apiKey, ...safe } = settings;
-    const gate = await isAllowed({ origin, tabId: sender?.tab?.id }, { settings });
-    return {
-      // The key itself never leaves the service worker.
-      settings: safe,
-      hasKey: Boolean(apiKey),
-      shutdown: {
-        global: settings.enabled === false,
-        website: (await getSiteShutdowns()).includes(normaliseOrigin(origin)),
-        tab: isTabShutdown(sender?.tab?.id),
-        allowed: gate.allowed,
-        blockedBy: gate.blockedBy,
-        reason: gate.reason
-      }
-    };
+  [MESSAGES.GET_STATE]: async (msg, sender) => loadSnapshot(msg.origin || originOf(sender), msg.tabId ?? sender?.tab?.id),
+
+  [MESSAGES.SET_SETTINGS]: async msg => {
+    const patch = msg.patch && typeof msg.patch === 'object' ? msg.patch : {};
+    const next = await setSettings(patch);
+    return withoutKey(next);
   },
 
   [MESSAGES.SET_SHUTDOWN]: async (msg, sender) => {
@@ -98,12 +142,116 @@ const handlers = {
       origin: msg.origin || originOf(sender),
       tabId: sender?.tab?.id ?? msg.tabId
     });
-    // Switching off must stop work already in flight, not just future work.
     if (msg.value) cancelAll();
     return result;
   },
 
-  // Local history. Off by default; the module itself refuses to store when off.
+  [MESSAGES.SAVE_PROFILE]: async msg => {
+    const existing = await ensureProfiles();
+    const checked = validateProfile(msg.profile || {});
+    if (!checked.ok) fail(checked.errors[0] || 'That profile is not valid.', 'invalid_profile', { errors: checked.errors });
+    const profiles = upsertProfile(existing, checked.profile);
+    await setCollection(STORAGE_KEYS.PROFILES, profiles);
+    return { profiles, warnings: checked.warnings };
+  },
+
+  [MESSAGES.DELETE_PROFILE]: async msg => {
+    const profiles = removeProfile(await ensureProfiles(), msg.id);
+    await setCollection(STORAGE_KEYS.PROFILES, profiles);
+    return { profiles };
+  },
+
+  [MESSAGES.SAVE_MODE]: async msg => {
+    const existing = await getCollection(STORAGE_KEYS.MODES, []);
+    const checked = validateCustomMode(msg.mode || {}, { existing });
+    if (!checked.ok) fail(checked.errors[0] || 'That mode is not valid.', 'invalid_mode', { errors: checked.errors });
+    const list = Array.isArray(existing) ? [...existing] : [];
+    const index = list.findIndex(m => m.id === checked.mode.id);
+    if (index >= 0) list[index] = checked.mode;
+    else list.push(checked.mode);
+    await setCollection(STORAGE_KEYS.MODES, list);
+    return { modes: [...BUILT_IN_MODES, ...list], warnings: checked.warnings };
+  },
+
+  [MESSAGES.DELETE_MODE]: async msg => {
+    if (BUILT_IN_MODES.some(m => m.id === msg.id)) fail('Built-in modes cannot be deleted.', 'built_in');
+    const existing = await getCollection(STORAGE_KEYS.MODES, []);
+    const list = (Array.isArray(existing) ? existing : []).filter(m => m.id !== msg.id);
+    await setCollection(STORAGE_KEYS.MODES, list);
+    return { modes: [...BUILT_IN_MODES, ...list] };
+  },
+
+  [MESSAGES.SET_FAVOURITES]: async msg => {
+    if (Array.isArray(msg.favourites)) {
+      const invalid = msg.favourites.find(f => !isValidModelId(typeof f === 'string' ? f : f?.id));
+      if (invalid) fail('A favourite was not a valid OpenRouter model id.', 'invalid_model');
+      await setCollection(STORAGE_KEYS.FAVOURITE_MODELS, msg.favourites);
+      return { favourites: msg.favourites };
+    }
+    const current = await getCollection(STORAGE_KEYS.FAVOURITE_MODELS, []);
+    if (msg.add) {
+      const result = addFavourite(current, msg.add);
+      if (!result.ok) fail(result.error, 'invalid_favourite');
+      await setCollection(STORAGE_KEYS.FAVOURITE_MODELS, result.favourites);
+      return { favourites: result.favourites };
+    }
+    if (msg.remove) {
+      const favourites = removeFavourite(current, msg.remove);
+      await setCollection(STORAGE_KEYS.FAVOURITE_MODELS, favourites);
+      return { favourites };
+    }
+    return { favourites: current };
+  },
+
+  [MESSAGES.ADD_DICTIONARY]: async msg => {
+    const current = await getCollection(STORAGE_KEYS.DICTIONARY, []);
+    const result = addWord(current, msg.word, msg.options || {});
+    if (!result.ok) fail(result.error, 'invalid_word');
+    await setCollection(STORAGE_KEYS.DICTIONARY, result.dictionary);
+    return { dictionary: result.dictionary };
+  },
+
+  [MESSAGES.REMOVE_DICTIONARY]: async msg => {
+    const current = await getCollection(STORAGE_KEYS.DICTIONARY, []);
+    const dictionary = removeWord(current, msg.word, msg.options || {});
+    await setCollection(STORAGE_KEYS.DICTIONARY, dictionary);
+    return { dictionary };
+  },
+
+  [MESSAGES.SET_CONSENT]: async msg => {
+    const consents = await setConsent(msg.host, Boolean(msg.allowed));
+    return { consents };
+  },
+
+  [MESSAGES.EXPORT_SETTINGS]: async () => {
+    const settings = await getSettings();
+    const state = {
+      settings,
+      profiles: await getCollection(STORAGE_KEYS.PROFILES, []),
+      customModes: await getCollection(STORAGE_KEYS.MODES, []),
+      promptTemplates: await getCollection(STORAGE_KEYS.PROMPTS, []),
+      dictionary: await getCollection(STORAGE_KEYS.DICTIONARY, []),
+      favouriteModels: await getCollection(STORAGE_KEYS.FAVOURITE_MODELS, [])
+    };
+    return exportToText(state);
+  },
+
+  [MESSAGES.IMPORT_SETTINGS]: async msg => {
+    const current = {
+      [STORAGE_KEYS.SETTINGS]: await getSettings(),
+      [STORAGE_KEYS.PROFILES]: await getCollection(STORAGE_KEYS.PROFILES, []),
+      [STORAGE_KEYS.MODES]: await getCollection(STORAGE_KEYS.MODES, []),
+      [STORAGE_KEYS.PROMPTS]: await getCollection(STORAGE_KEYS.PROMPTS, []),
+      [STORAGE_KEYS.DICTIONARY]: await getCollection(STORAGE_KEYS.DICTIONARY, []),
+      [STORAGE_KEYS.FAVOURITE_MODELS]: await getCollection(STORAGE_KEYS.FAVOURITE_MODELS, [])
+    };
+    const planned = planImport(String(msg.text || ''), current);
+    if (!planned.ok) fail(planned.errors[0] || 'That file could not be imported.', 'invalid_import', { errors: planned.errors });
+    if (!msg.confirm) return { needsConfirm: true, summary: planned.summary, warnings: planned.warnings };
+    await applyImport(planned.plan);
+    return { applied: true, summary: planned.summary, warnings: planned.warnings };
+  },
+
   [MESSAGES.HISTORY_ADD]: async msg => recordHistory(msg.entry || {}),
   [MESSAGES.HISTORY_LIST]: async () => listHistory(),
   [MESSAGES.HISTORY_CLEAR]: async () => clearHistory(),
@@ -127,3 +275,4 @@ function serialiseError(error) {
     retryable: Boolean(error?.retryable)
   };
 }
+
