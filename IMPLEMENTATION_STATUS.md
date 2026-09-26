@@ -153,7 +153,12 @@ Status values: `complete`, `in progress`, `blocked`, `not started`.
 
 | Field | Value |
 |---|---|
-| **Status** | not started |
+| **Status** | complete |
+| **Commit** | `cdc78b9` |
+| **Tests performed** | `npm run verify`; 416 unit assertions total. New: `adapters.test.js` (21) against a purpose-built DOM harness (`tests/helpers/fake-dom.js`) with realistic markup for each site. |
+| **Acceptance criteria** | ✅ Adapters for WhatsApp Web, Gmail, LinkedIn, Slack, Notion and a generic fallback, each declaring real platform constraints — WhatsApp plain text, Slack's partial Markdown, LinkedIn's 3,000-character limit, Gmail's rich text. ✅ Every adapter lists multiple candidate selectors and degrades to no context when markup changes, asserted: a throwing adapter yields no context and an explanation, never the wrong conversation. ✅ **Nearby context is off by default and requires two switches**: the global preference *and* per-site consent. Either alone produces no capture, asserted separately. ✅ The preview and the prompt block are built from the same array, so the disclosure cannot understate what is sent. ✅ Captured text is credential-redacted, injection-neutralised and wrapped as untrusted data. ✅ The user can drop individual messages from the capture. |
+| **Remaining issues** | Notion deliberately reads no surrounding blocks: a Notion page is a document, and neighbouring blocks are usually unrelated private notes. This is stated in the adapter's own `contextDescription` and shown in the UI. |
+| **Evidence** | `disclosureLine` states the message count, the site, and any redactions, and is asserted for each branch. |
 
 ### Run 13 — Exact ranges, comparison, and safe application
 
