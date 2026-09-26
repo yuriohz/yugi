@@ -142,14 +142,19 @@ export function detectSlop(text, options = {}) {
 function escapeRe(s) { return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
 /**
- * Em dashes are allowed sparingly in longer drafts and not at all in short copy.
- * Upstream: "In short copy, use none. In longer drafts, 1-2 are fine."
+ * Em dashes are allowed sparingly: one anywhere, two in longer drafts.
+ *
+ * Review decision Q6: upstream says short copy should use none, but a single
+ * em dash is usually deliberate punctuation, not a crutch, and flagging every
+ * lone dash trains the writer to ignore the warning. The detector rule stays
+ * advisory; the post-flight budget fails only when the dash is actually doing
+ * the rhythm's work.
  */
 export function emDashBudget(text) {
   const source = String(text ?? '');
   const count = (source.match(/—/g) || []).length;
   const words = (source.match(/\S+/g) || []).length;
-  const allowed = words < 120 ? 0 : 2;
+  const allowed = words < 120 ? 1 : 2;
   return { count, allowed, words, overBudget: count > allowed };
 }
 

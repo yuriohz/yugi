@@ -11,11 +11,15 @@ import { makeUndoEntry, UndoStack } from '../core/diff.js';
 import { OPERATION, LENGTH, getBuiltInMode } from '../core/modes.js';
 import { filterIssues } from '../core/dictionary.js';
 import { captureContext, disclosureLine, normaliseHost } from '../core/context-consent.js';
+import { sortByUse } from '../core/favourites.js';
+import { researchDisclosure, supportedClaimsOnly } from '../core/research.js';
 import { drawHighlights, clearHighlights } from './highlight.js';
 import { ask } from '../ui/messaging.js';
 import {
   renderModeLauncher, renderComposer, renderProofreadBody, renderRewriteBody,
-  renderReviewBody, statusBlock, applyRewriteAllowed
+  renderReviewBody, renderInsightsHome, renderToneBody, renderReaderBody,
+  renderContextControls, researchAvailability, capabilityBadges,
+  statusBlock, applyRewriteAllowed
 } from '../ui/render.js';
 
 if (!window.__writeRightLoaded) {
@@ -51,8 +55,11 @@ function start() {
     includeContext: false,
     lastRewrite: null,
     lastReview: null,
+    lastInsight: null,
+    audience: '',
     error: '',
     acknowledged: false,
+    contraAcked: new Set(),
     running: false
   };
 
@@ -126,10 +133,12 @@ function start() {
     const favourites = snap.favourites || [];
     const settings = snap.settings || {};
     fillSelect(el.profile, profiles.map(p => ({ value: p.id, label: p.name, selected: p.id === settings.activeProfileId })), 'Default');
-    const models = favourites.length ? favourites : [{ id: settings.model || '', label: settings.model || 'Default model' }];
+    const models = favourites.length ? sortByUse(favourites) : [{ id: settings.model || '', label: settings.model || 'Default model' }];
     fillSelect(el.model, models.map(m => {
       const id = m.id || m;
-      return { value: id, label: m.label || m.displayName || id, selected: id === settings.model };
+      const base = m.label || m.displayName || id;
+      const badges = m && typeof m === 'object' && m.id ? capabilityBadges(m).map(b => b.text).join(' · ') : '';
+      return { value: id, label: badges ? `${base} · ${badges}` : base, selected: id === settings.model };
     }), 'Default model');
   }
 
@@ -275,19 +284,44 @@ function start() {
         canUndo: state.undo.size > 0
       });
     }
-    if (state.view === 'rewrite' && state.lastRewrite) {
+    if (state.tab === 'rewrite' && state.view === 'rewrite' && state.lastRewrite) {
       return renderRewriteBody({ original: state.checkedText, result: state.lastRewrite, acknowledged: state.acknowledged });
     }
-    if (state.view === 'review' && state.lastReview) {
-      return renderReviewBody({ result: state.lastReview, acknowledged: state.acknowledged });
+    if (state.tab === 'rewrite' && state.view === 'review' && state.lastReview) {
+      return renderReviewBody({ result: state.lastReview, acked: [...state.contraAcked] });
+    }
+    if (state.tab === 'insights') {
+      if (state.view === 'tone' && state.lastInsight) return renderToneBody({ result: state.lastInsight });
+      if (state.view === 'reader' && state.lastInsight) return renderReaderBody({ result: state.lastInsight });
+      return renderInsightsHome({
+        canRun: Boolean(state.checkedText && state.checkedText.trim().length >= 3),
+        audience: state.audience
+      });
     }
     const mode = selectedMode();
+    const host = normaliseHost(location.host);
+    const researchNote = state.research
+      ? researchDisclosure({
+          research: { maxResults: snap.settings?.research?.maxResults },
+          inputChars: (state.checkedText || '').length
+        }).message
+      : '';
     return renderModeLauncher({ modes: snap.modes || [], selectedId: state.selectedModeId }) +
       renderComposer({
         mode,
         length: state.length,
         research: state.research,
-        contextNote: contextNote(),
+        researchNote,
+        researchState: researchAvailability({
+          favourites: snap.favourites || [],
+          modelId: el.model.value || snap.settings?.model || ''
+        }),
+        contextControls: renderContextControls({
+          globallyEnabled: snap.settings?.context?.nearbyEnabled === true,
+          consented: Boolean(snap.consents?.[host]),
+          host,
+          disclosure: contextNote()
+        }),
         canRun: Boolean(state.checkedText && state.checkedText.trim().length >= 3)
       });
   }
@@ -300,6 +334,7 @@ function start() {
     state.running = true;
     state.error = '';
     state.acknowledged = false;
+    state.contraAcked = new Set();
     paint();
     const seq = ++state.requestSeq;
     const requestId = `wr-run-${seq}`;
@@ -355,6 +390,98 @@ function start() {
           }
         }).catch(() => {});
       }
+    } catch (error) {
+      if (seq !== state.requestSeq) return;
+      state.error = error.message;
+      state.view = 'error';
+      state.tab = 'suggestions';
+    } finally {
+      if (seq === state.requestSeq) {
+        state.running = false;
+        root.classList.remove('wr-loading');
+        paint();
+      }
+    }
+  }
+
+  async function runInsight(kind) {
+    const text = state.active ? readText(state.active) : state.checkedText;
+    if (!text.trim()) return;
+    const task = kind === 'reader' ? TASKS.READER_REACTION : TASKS.TONE;
+    state.checkedText = text;
+    state.running = true;
+    state.error = '';
+    paint();
+    const seq = ++state.requestSeq;
+    try {
+      const response = await ask(MESSAGES.RUN_TASK, {
+        origin: location.origin,
+        payload: {
+          task,
+          requestId: `wr-insight-${seq}`,
+          text,
+          origin: location.origin,
+          profileId: el.profile.value || undefined,
+          model: el.model.value || undefined,
+          options: state.audience.trim() ? { audiences: [state.audience.trim()] } : {}
+        }
+      });
+      if (seq !== state.requestSeq) return;
+      state.lastInsight = response.result;
+      state.view = kind === 'reader' ? 'reader' : 'tone';
+      state.tab = 'insights';
+    } catch (error) {
+      if (seq !== state.requestSeq) return;
+      state.error = error.message;
+      state.view = 'error';
+      state.tab = 'suggestions';
+    } finally {
+      if (seq === state.requestSeq) {
+        state.running = false;
+        root.classList.remove('wr-loading');
+        paint();
+      }
+    }
+  }
+
+  async function runGrounded() {
+    if (!state.lastReview) return;
+    const { supported, excluded } = supportedClaimsOnly(state.lastReview);
+    if (!supported.length) return;
+    const selected = selectedMode();
+    const mode = selected && selected.operation === OPERATION.REWRITE ? selected : getBuiltInMode('polish');
+    const text = state.active ? readText(state.active) : state.checkedText;
+    if (!text.trim() || !mode) return;
+    state.checkedText = text;
+    state.running = true;
+    state.error = '';
+    state.acknowledged = false;
+    paint();
+    const seq = ++state.requestSeq;
+    try {
+      const response = await ask(MESSAGES.RUN_TASK, {
+        origin: location.origin,
+        payload: {
+          task: TASKS.REWRITE,
+          requestId: `wr-grounded-${seq}`,
+          text,
+          origin: location.origin,
+          modeId: mode.id,
+          profileId: el.profile.value || undefined,
+          model: el.model.value || undefined,
+          options: {
+            length: state.length,
+            grounding: {
+              supported: supported.map(c => ({ text: c.text })),
+              excluded: excluded.map(c => ({ text: c.text }))
+            }
+          }
+        }
+      });
+      if (seq !== state.requestSeq) return;
+      state.lastRewrite = response.result;
+      state.view = 'rewrite';
+      state.tab = 'rewrite';
     } catch (error) {
       if (seq !== state.requestSeq) return;
       state.error = error.message;
@@ -446,7 +573,10 @@ function start() {
     const tab = event.target.closest('[data-tab]');
     if (tab) {
       state.tab = tab.dataset.tab;
-      if (state.tab === 'rewrite' && state.view === 'error') state.view = 'home';
+      // A result view belongs to its tab; anything else resets to the tab home.
+      const keep = (state.tab === 'rewrite' && (state.view === 'rewrite' || state.view === 'review'))
+        || (state.tab === 'insights' && (state.view === 'tone' || state.view === 'reader'));
+      if (!keep) state.view = 'home';
       paint();
       return;
     }
@@ -466,10 +596,14 @@ function start() {
       return;
     }
     if (event.target.closest('[data-run]')) runSelected();
+    const insight = event.target.closest('[data-insight]');
+    if (insight) runInsight(insight.dataset.insight);
+    if (event.target.closest('[data-draft-grounded]')) runGrounded();
     if (event.target.closest('[data-back]')) {
       state.view = 'home';
       state.lastRewrite = null;
       state.lastReview = null;
+      state.lastInsight = null;
       paint();
     }
     if (event.target.closest('[data-retry]')) runSelected();
@@ -495,6 +629,9 @@ function start() {
     if (event.target.closest('[data-allow-context]')) {
       ask(MESSAGES.SET_CONSENT, { host: location.host, allowed: true }).then(refreshSnapshot).then(paint);
     }
+    if (event.target.closest('[data-enable-context-global]')) {
+      ask(MESSAGES.SET_SETTINGS, { patch: { context: { nearbyEnabled: true } } }).then(refreshSnapshot).then(paint);
+    }
   });
 
   root.addEventListener('change', event => {
@@ -505,11 +642,25 @@ function start() {
       state.acknowledged = event.target.checked;
       paint();
     }
+    if (event.target.matches('[data-contra]')) {
+      const index = Number(event.target.dataset.contra);
+      if (event.target.checked) state.contraAcked.add(index);
+      else state.contraAcked.delete(index);
+      paint();
+    }
     if (event.target === el.profile) {
       ask(MESSAGES.SET_SETTINGS, { patch: { activeProfileId: el.profile.value } }).catch(() => {});
     }
     if (event.target === el.model) {
       ask(MESSAGES.SET_SETTINGS, { patch: { model: el.model.value } }).catch(() => {});
+    }
+  });
+
+  // The audience field must not repaint: repainting replaces the input the
+  // user is typing into.
+  root.addEventListener('input', event => {
+    if (event.target.matches('[data-audience]')) {
+      state.audience = event.target.value;
     }
   });
 
@@ -528,13 +679,13 @@ function shell() {
         <nav class="wr-tabs">
           <button type="button" class="wr-tab active" data-tab="rewrite">Rewrite</button>
           <button type="button" class="wr-tab" data-tab="suggestions">Suggestions <em hidden>0</em></button>
+          <button type="button" class="wr-tab" data-tab="insights">Insights</button>
         </nav>
       </header>
       <div class="wr-body"></div>
       <footer>
         <span>AI output can be wrong. Review before sending.</span>
         <span class="wr-foot-actions">
-          <button type="button" data-allow-context>Allow context</button>
           <button type="button" data-pause-site>Pause site</button>
           <button type="button" data-pause-tab>Pause tab</button>
           <button type="button" data-settings>Settings</button>

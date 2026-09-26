@@ -212,17 +212,28 @@ Status values: `complete`, `in progress`, `blocked`, `not started`.
 | **Status** | complete |
 | **Why this existed** | PR #2 rebuilt the engine but copied the v1 popup, options and onboarding pages unchanged. They still sent `TEST_CONNECTION` / `CHECK_TEXT` and wrote flat `chrome.storage.local` keys, while the worker expected `WR_*` messages and a nested `settings` blob. The five modes were not reachable in the widget. |
 | **Tests performed** | `npm run verify`. New: `ui-render.test.js` (mode launcher, blocked apply, popup copy, escaped proofread cards, calibrated review labels) and `ui-protocol.test.js` (no v1 message types, onboarding uses `WR_TEST_CONNECTION` with `userInitiated`, content script launches rewrite and review). |
-| **Acceptance criteria** | ✅ Popup, options and onboarding read and write through `GET_STATE` / `SET_SETTINGS` / `TEST_CONNECTION`. ✅ Connection test uses `WR_TEST_CONNECTION`. ✅ In-page widget lists all five built-in modes, runs rewrite and technical review, and refuses Replace while a fidelity/guardrail block is unacknowledged. ✅ Shutdown toggles exist in the popup (everywhere / this site / this tab). ✅ Settings expose profiles, custom modes, favourites, dictionary, nearby-context, history, and keyless export. |
+| **Acceptance criteria** | ✅ Popup, options and onboarding read and write through `WR_GET_STATE` / `WR_SET_SETTINGS` / `WR_TEST_CONNECTION`. ✅ Connection test uses `WR_TEST_CONNECTION` with `userInitiated`. ✅ In-page widget lists all five built-in modes, runs rewrite and technical review, and refuses Replace while a fidelity/guardrail block is unacknowledged. ✅ Shutdown toggles exist in the popup (everywhere / this site / this tab). ✅ Settings expose profiles, custom modes, favourites, dictionary, nearby-context, history, and keyless export. |
+
+### Opus gaps — answers to the v2 reviewer prompts
+
+| Field | Value |
+|---|---|
+| **Status** | complete |
+| **Branch** | `arena/01a0de07-yugi` |
+| **Why this existed** | `DEBRIEF_FOR_OPUS.md` §10 raised eight reviewer prompts (Q1–Q8). Each is now answered in code, not prose, and the answers are recorded in `docs/REVIEW_DECISIONS.md`. The same change closed the reachability gaps the brief's evidence exposed: engine-complete capabilities with no UI path. |
+| **Tests performed** | `npm run verify`. 492 unit assertions (was 472), 16 integration journeys (was 15). New coverage: informed-override banner, clause-level certainty stripping, three consent states, research availability and capability badges, per-profile dialect precedence, em-dash recalibration, verdict explainers, tone/reader renderers, grounded rewrite, hostile import skipping, cache-only snapshot, single popup action. New journey: researched review → draft a grounded response. |
+| **Acceptance criteria** | ✅ Q1: blocked-apply banner lists the exact violations; ack resets per run. ✅ Q2: certainty stripping keeps clean clauses, drops twice-offending sentences entirely. ✅ Q3: both context switches visible and actionable in the composer. ✅ Q4: unknown tool support stays refused, with capability badges and an upfront gated toggle; snapshot reads the catalogue cache only. ✅ Q5: per-profile Arabic dialect wins over the mode default. ✅ Q6: em-dash budget allows one dash, fails a crutch. ✅ Q7: every verdict carries a plain-language explainer; design doc aligned. ✅ Q8: 20 new unit assertions + 1 journey, biased to refusals as before. ✅ Insights tab runs tone and reader reactions. ✅ Research cost disclosed before running. ✅ Contradictions are an honest per-source checklist. ✅ Grounded draft completes the Technical Review loop. ✅ Saved prompts persist, validate, transfer. ✅ Hostile modes/prompts skipped on import. ✅ Popup has one settings action and honest toggle copy. |
+| **Deliberately deferred** | In-page prompt runner (no router task yet; custom modes cover reusable instructions in the widget). Real-browser acceptance, runtime screenshots, the public name, store submission — unchanged, owned elsewhere. |
 
 ## Final state
 
 | | |
 |---|---|
-| Runs complete | **16 of 16**, plus UI wiring so chrome surfaces speak v2 |
-| Unit assertions | 472, all passing |
-| Integration journeys | 15, all passing |
-| Lint / secret scan | clean over 141 files |
-| Build | 17 files, 338.0 kB |
+| Runs complete | **16 of 16**, plus UI wiring so chrome surfaces speak v2, plus Opus gaps |
+| Unit assertions | 492, all passing |
+| Integration journeys | 16, all passing |
+| Lint / secret scan | clean over 142 files |
+| Build | 17 files, 382.7 kB |
 | Package | allow-list enforced |
 | `npm audit` | 0 vulnerabilities |
 | Blocked | real-browser testing, runtime screenshots, the final name, store submission |

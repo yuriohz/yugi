@@ -4,7 +4,7 @@
  * without a browser.
  */
 import { escapeHtml, escapeAttr } from '../core/escape.js';
-import { VERDICT_LABELS, SEVERITY } from '../core/constants.js';
+import { VERDICT_LABELS, VERDICT_EXPLAINERS, SEVERITY } from '../core/constants.js';
 import { OPERATION, LENGTH } from '../core/modes.js';
 import { diffTokens } from '../core/diff.js';
 
@@ -33,7 +33,7 @@ export function renderModeLauncher({ modes, selectedId }) {
   }).join('') + `</div>`;
 }
 
-export function renderComposer({ mode, length = LENGTH.SAME, research = false, contextNote = '', canRun = true }) {
+export function renderComposer({ mode, length = LENGTH.SAME, research = false, contextNote = '', contextControls = '', researchNote = '', researchState = null, canRun = true }) {
   if (!mode) return '';
   const isReview = mode.operation === OPERATION.REVIEW;
   const lengthControl = mode.controls?.length
@@ -43,18 +43,113 @@ export function renderComposer({ mode, length = LENGTH.SAME, research = false, c
       lengthButton(LENGTH.LONGER, length, 'Longer') +
       `</div>`
     : '';
-  const researchControl = mode.controls?.research
-    ? `<label class="wr-check"><input type="checkbox" data-research ${research ? 'checked' : ''}><span>Search the web for this review</span></label>`
-    : '';
-  const context = contextNote
+  let researchControl = '';
+  if (mode.controls?.research) {
+    // The toggle is disabled up front when the selected model cannot search,
+    // with the reason stated, rather than failing after the click.
+    const gated = researchState ? researchState.allowed === false : false;
+    researchControl = `<label class="wr-check"><input type="checkbox" data-research ${research && !gated ? 'checked' : ''}${gated ? ' disabled' : ''}><span>Search the web for this review</span></label>`;
+    if (gated && researchState.reason) {
+      researchControl += `<p class="wr-cap">${escapeHtml(researchState.reason)}</p>`;
+    } else if (research && researchNote) {
+      researchControl += `<p class="wr-research-note">${escapeHtml(researchNote)}</p>`;
+    } else {
+      researchControl += `<p class="wr-research-note">Research may increase OpenRouter cost.</p>`;
+    }
+  }
+  const context = contextControls || (contextNote
     ? `<p class="wr-context">${escapeHtml(contextNote)}</p>`
-    : '';
+    : '');
   const action = isReview ? (research ? 'Review with sources' : 'Review the reasoning') : `Rewrite · ${mode.name}`;
   return `<div class="wr-composer">` +
     `<p class="wr-composer-lead">${escapeHtml(mode.description || mode.summary || '')}</p>` +
     lengthControl + researchControl + context +
     `<button type="button" class="wr-primary" data-run ${canRun ? '' : 'disabled'}>${escapeHtml(action)}</button>` +
     `</div>`;
+}
+
+/**
+ * The two nearby-context switches, shown together where the text is written.
+ *
+ * Review decision Q3: the global preference lives in settings and the per-site
+ * consent lives here, and neither works alone. Showing both states side by
+ * side — with the missing one actionable — keeps the conservative default
+ * without making the feature undiscoverable or the states contradictory.
+ */
+export function renderContextControls({ globallyEnabled = false, consented = false, host = '', disclosure = '' } = {}) {
+  const site = host || 'this site';
+  let state;
+  let action = '';
+  if (globallyEnabled && consented) {
+    state = `<span class="wr-ctx-on">On for ${escapeHtml(site)}</span>`;
+  } else if (!globallyEnabled) {
+    state = `<span class="wr-ctx-off">Off</span>`;
+    action = `<button type="button" class="wr-ghost" data-enable-context-global>Switch on</button>`;
+  } else {
+    state = `<span class="wr-ctx-off">Not allowed on ${escapeHtml(site)}</span>`;
+    action = `<button type="button" class="wr-ghost" data-allow-context>Allow on ${escapeHtml(site)}</button>`;
+  }
+  const line = disclosure ? `<p class="wr-context">${escapeHtml(disclosure)}</p>` : '';
+  return `<div class="wr-ctx"><div class="wr-ctx-row"><span><strong>Nearby conversation</strong> · ${state}</span>${action}</div>${line}</div>`;
+}
+
+/** Short capability badges for a favourite model, from the cached catalogue. */
+export function capabilityBadges(favourite = {}) {
+  if (favourite.available === false) return [{ text: 'unavailable', tone: 'bad' }];
+  if (favourite.supportsResearch == null && !favourite.capabilities) {
+    return [{ text: 'capabilities unknown', tone: 'muted' }];
+  }
+  const out = [];
+  out.push(favourite.supportsResearch
+    ? { text: 'web research', tone: 'good' }
+    : { text: 'no web research', tone: 'bad' });
+  if (favourite.contextLength) {
+    out.push({ text: `${formatK(favourite.contextLength)} context`, tone: 'muted' });
+  }
+  return out;
+}
+
+function formatK(n) {
+  return n >= 1000 ? `${Math.round(n / 1000)}k` : String(n);
+}
+
+/**
+ * Whether researched review can run on the selected model.
+ *
+ * Review decision Q4: unknown tool support stays refused — a silent tool
+ * failure would produce uncited claims, the worst outcome in this product —
+ * but the refusal happens here, in the widget, with instructions, instead of
+ * after the user waits for a request that was never going to run.
+ */
+export function researchAvailability({ favourites = [], modelId = '' } = {}) {
+  const match = favourites.find(f => f && typeof f === 'object' && f.id === modelId);
+  if (!match) {
+    return {
+      allowed: false,
+      known: false,
+      reason: 'WriteRight has not confirmed that this model can search the web. Refresh the model catalogue in settings, then try again.'
+    };
+  }
+  if (match.available === false) {
+    return {
+      allowed: false,
+      known: true,
+      reason: 'This model is not in the current OpenRouter catalogue. Pick a favourite that is still listed.'
+    };
+  }
+  if (match.supportsResearch === true) return { allowed: true, known: true, reason: '' };
+  if (match.supportsResearch === false) {
+    return {
+      allowed: false,
+      known: true,
+      reason: 'This model cannot search the web. Pick a favourite with web research support to use researched review.'
+    };
+  }
+  return {
+    allowed: false,
+    known: false,
+    reason: 'WriteRight has not confirmed that this model can search the web. Refresh the model catalogue in settings, then try again.'
+  };
 }
 
 function lengthButton(value, current, label) {
@@ -101,9 +196,13 @@ export function renderRewriteBody({ original, result, acknowledged = false }) {
     ...added.map(f => `Added ${f.kind}: ${f.label || f.raw}`)
   ].filter(Boolean);
 
+  // Review decision Q1: the block stays hard, but the override is informed —
+  // the banner names the exact violations rather than gesturing at them.
+  const blocking = violations.filter(v => v.blocking);
   const banner = blocked
-    ? `<div class="wr-blocked"><strong>Apply is blocked</strong><p>This proposal changed a fact, a date, or a position that was not in your text. Tick the box only if you have read the warning and still want to replace your writing.</p>` +
-      `<label class="wr-check"><input type="checkbox" data-ack><span>I have read the warning</span></label></div>`
+    ? `<div class="wr-blocked"><strong>Apply is blocked</strong><p>This proposal changed something checkable in your text. Read each item below. Tick the box only if you have read them and still want to replace your writing.</p><ul>` +
+      blocking.slice(0, 5).map(v => `<li>${escapeHtml(v.message || v)}</li>`).join('') + `</ul>` +
+      `<label class="wr-check"><input type="checkbox" data-ack><span>I have read each warning above</span></label></div>`
     : warnings.length
       ? `<div class="wr-warn"><strong>Check before you apply</strong><ul>` +
         warnings.slice(0, 8).map(w => `<li>${escapeHtml(w)}</li>`).join('') + `</ul></div>`
@@ -113,9 +212,13 @@ export function renderRewriteBody({ original, result, acknowledged = false }) {
   const list = changed.length
     ? `<ul class="wr-changed">` + changed.map(item => `<li>${escapeHtml(item)}</li>`).join('') + `</ul>`
     : '';
+  const grounded = result.grounded
+    ? `<p class="wr-grounded">Drafted from ${result.groundingCounts?.supported ?? 0} supported claim${(result.groundingCounts?.supported ?? 0) === 1 ? '' : 's'}${result.groundingCounts?.excluded ? ` (${result.groundingCounts.excluded} unchecked or contradicted ${(result.groundingCounts?.excluded ?? 0) === 1 ? 'claim' : 'claims'} excluded)` : ''}.</p>`
+    : '';
 
   return `<div class="wr-compare">` +
     banner +
+    grounded +
     `<div class="wr-diff wr-bidi" dir="auto">${renderDiff(ops)}</div>` +
     list +
     `<div class="wr-actions">` +
@@ -135,19 +238,26 @@ export function renderDiff(ops = []) {
   }).join('');
 }
 
-export function renderReviewBody({ result, acknowledged = false }) {
+export function renderReviewBody({ result, acked = [] }) {
   if (!result) return statusBlock('idle', 'No review yet', 'Technical Review checks the reasoning first. It does not rewrite.');
-  const blocked = Boolean(result.applyBlocked) && !acknowledged;
   const verdict = VERDICT_LABELS[result.verdict] || result.verdict || 'Needs verification';
+  const explainer = VERDICT_EXPLAINERS[result.verdict] || '';
   const findings = result.findings || [];
   const claims = result.claims || [];
   const citations = result.citations || [];
   const contradictions = result.contradictions || [];
+  const read = new Set(acked);
+  const outstanding = contradictions.filter((item, index) => !read.has(index)).length;
 
-  const banner = blocked
-    ? `<div class="wr-blocked"><strong>A source contradicts this text</strong><p>Apply stays blocked until you acknowledge each contradiction.</p>` +
-      `<label class="wr-check"><input type="checkbox" data-ack><span>I have read the contradicting source</span></label></div>`
-    : '';
+  // A review produces no replacement text, so there is no apply to gate. The
+  // previous single checkbox pretended otherwise. Contradictions are now a
+  // per-source reading checklist: honest about what it is, and each source is
+  // opened from the citation list below.
+  const banner = contradictions.length && outstanding > 0
+    ? `<div class="wr-blocked"><strong>${outstanding} of ${contradictions.length} contradicting source${contradictions.length === 1 ? '' : 's'} unread</strong><p>A source disagrees with this text. Read each one below, then tick it. The review itself changes nothing.</p></div>`
+    : contradictions.length
+      ? `<div class="wr-warn"><strong>Contradictions reviewed</strong><p>You have read each contradicting source. Decide what to change before drafting anything from this review.</p></div>`
+      : '';
 
   const findingCards = findings.map(finding => {
     const sev = finding.severity || SEVERITY.IMPROVEMENT;
@@ -171,16 +281,68 @@ export function renderReviewBody({ result, acknowledged = false }) {
     : '';
 
   const contra = contradictions.length
-    ? `<ul class="wr-contra">` + contradictions.map(item => `<li>${escapeHtml(item.explanation || '')}</li>`).join('') + `</ul>`
+    ? `<ul class="wr-contra">` + contradictions.map((item, index) =>
+      `<li><label class="wr-check"><input type="checkbox" data-contra="${index}"${read.has(index) ? ' checked' : ''}><span>${escapeHtml(item.explanation || '')}</span></label></li>`
+    ).join('') + `</ul>`
     : '';
+
+  const supported = claims.filter(c => c.status === 'supported').length;
+  const draft = supported
+    ? `<button type="button" class="wr-primary" data-draft-grounded>Draft response from ${supported} supported claim${supported === 1 ? '' : 's'}</button>`
+    : claims.length
+      ? `<p class="wr-context">No claim was supported, so there is nothing to draft from yet.</p>`
+      : '';
 
   return `<div class="wr-review">` +
     banner +
-    `<div class="wr-verdict"><strong>${escapeHtml(verdict)}</strong><p>${escapeHtml(result.verdictReason || '')}</p></div>` +
+    `<div class="wr-verdict"><strong>${escapeHtml(verdict)}</strong>${explainer ? `<p class="wr-explainer">${escapeHtml(explainer)}</p>` : ''}<p>${escapeHtml(result.verdictReason || '')}</p></div>` +
     (result.recommendedDirection ? `<p class="wr-direction">${escapeHtml(result.recommendedDirection)}</p>` : '') +
     findingCards + claimList + contra + sources +
     `<div class="wr-actions"><button type="button" class="wr-ghost" data-back>Back</button>` +
-    `<button type="button" class="wr-ghost" data-retry>Run again</button></div></div>`;
+    `<button type="button" class="wr-ghost" data-retry>Run again</button>${draft}</div></div>`;
+}
+
+/**
+ * Read-only views of how the text lands. Tone and reader reactions were
+ * engine-complete with no way to reach them; this is their surface. Nothing
+ * here edits, and the hedged contract is shown, not implied.
+ */
+export function renderInsightsHome({ canRun = true, audience = '' } = {}) {
+  return `<div class="wr-insights">` +
+    `<p class="wr-composer-lead">Read-only views of how your text lands. Nothing here changes your writing.</p>` +
+    `<label class="wr-audience">Audience (optional)<input type="text" data-audience value="${escapeAttr(audience)}" placeholder="Clients, colleagues…" maxlength="120"></label>` +
+    `<div class="wr-actions"><button type="button" class="wr-ghost" data-insight="tone"${canRun ? '' : ' disabled'}>Check tone</button>` +
+    `<button type="button" class="wr-ghost" data-insight="reader"${canRun ? '' : ' disabled'}>Preview reader reactions</button></div></div>`;
+}
+
+export function renderToneBody({ result } = {}) {
+  if (!result) return statusBlock('idle', 'No tone check yet', 'Check tone to see how the wording reads, with quoted evidence.');
+  const dimensions = (result.dimensions || []).map(d => {
+    const strength = Math.max(0, Math.min(1, Number(d.strength) || 0));
+    const evidence = (d.evidence || []).map(q => `<blockquote class="wr-bidi">“${escapeHtml(q)}”</blockquote>`).join('');
+    return `<article class="wr-tone"><small>${escapeHtml(d.name || 'tone')}</small>` +
+      `<div class="wr-meter" role="img" aria-label="Strength ${Math.round(strength * 100)} percent"><i style="width:${Math.round(strength * 100)}%"></i></div>` +
+      evidence + `</article>`;
+  }).join('');
+  const overall = result.overall ? `<p class="wr-direction">${escapeHtml(result.overall)}</p>` : '';
+  const mismatch = result.mismatch ? `<div class="wr-warn"><strong>Possible mismatch</strong><p>${escapeHtml(result.mismatch)}</p></div>` : '';
+  const note = result.note ? `<p class="wr-context">${escapeHtml(result.note)}</p>` : '';
+  return `<div class="wr-insight-result">${overall}${dimensions}${mismatch}${note}` +
+    `<div class="wr-actions"><button type="button" class="wr-ghost" data-back>Back</button>` +
+    `<button type="button" class="wr-ghost" data-insight="tone">Run again</button></div></div>`;
+}
+
+export function renderReaderBody({ result } = {}) {
+  if (!result) return statusBlock('idle', 'No reactions yet', 'Preview how the wording could be read by someone else.');
+  const reactions = (result.reactions || []).map(r =>
+    `<article class="wr-reaction"><small>${escapeHtml(r.audience || 'reader')} · ${escapeHtml(r.likelihood || 'possible')}</small>` +
+    `<p>${escapeHtml(r.possibleInterpretation || '')}</p>` +
+    (r.trigger ? `<blockquote class="wr-bidi">“${escapeHtml(r.trigger)}”</blockquote>` : '') + `</article>`
+  ).join('');
+  const caveat = result.caveat ? `<p class="wr-caveat">${escapeHtml(result.caveat)}</p>` : '';
+  return `<div class="wr-insight-result">${reactions}${caveat}` +
+    `<div class="wr-actions"><button type="button" class="wr-ghost" data-back>Back</button>` +
+    `<button type="button" class="wr-ghost" data-insight="reader">Run again</button></div></div>`;
 }
 
 export function statusBlock(kind, title, message, actionLabel, action) {

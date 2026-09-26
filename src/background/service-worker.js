@@ -14,12 +14,13 @@ import { MESSAGES, STORAGE_KEYS } from '../core/constants.js';
 import { getSettings, setSettings, getCollection, setCollection } from '../core/storage.js';
 import { isAllowed, setShutdown, clearTabShutdown, getSiteShutdowns, normaliseOrigin, isTabShutdown } from '../core/shutdown.js';
 import { runTask, cancelTask, cancelAll, testConnection } from './router.js';
-import { getCatalogue } from './model-catalogue.js';
+import { getCatalogue, getCachedCatalogue } from './model-catalogue.js';
 import { record as recordHistory, list as listHistory, clear as clearHistory, describeHistory } from '../core/history.js';
 import { BUILT_IN_MODES } from '../core/modes.js';
 import { defaultProfiles, validateProfile, upsertProfile, removeProfile } from '../core/profiles.js';
-import { validateCustomMode } from '../core/custom-modes.js';
-import { addFavourite, removeFavourite, isValidModelId } from '../core/favourites.js';
+import { validateCustomMode, validatePrompt } from '../core/custom-modes.js';
+import { addFavourite, removeFavourite, isValidModelId, decorateFavourites, recordUse } from '../core/favourites.js';
+import { capabilitiesFor } from '../core/model-compat.js';
 import { addWord, removeWord } from '../core/dictionary.js';
 import { exportToText, planImport, applyImport } from '../core/transfer.js';
 import { getConsents, setConsent } from '../core/context-consent.js';
@@ -85,10 +86,22 @@ async function loadSnapshot(origin, tabId) {
   const gate = await isAllowed({ origin, tabId }, { settings });
   const profiles = await ensureProfiles();
   const customModes = await getCollection(STORAGE_KEYS.MODES, []);
+  const prompts = await getCollection(STORAGE_KEYS.PROMPTS, []);
   const dictionary = await getCollection(STORAGE_KEYS.DICTIONARY, []);
   const favouriteModels = await getCollection(STORAGE_KEYS.FAVOURITE_MODELS, []);
   const historyEntries = await listHistory({ settings });
   const consents = await getConsents();
+  // Capabilities come from the cache only. Reading the network here would
+  // issue a request every time the panel opens — including while the
+  // extension is switched off, which the zero-call guarantee forbids.
+  const { models: cachedModels } = await getCachedCatalogue().catch(() => ({ models: [] }));
+  const favourites = decorateFavourites(
+    Array.isArray(favouriteModels) ? favouriteModels : [],
+    cachedModels,
+    { currentModel: settings.model }
+  );
+  const defaultEntry = cachedModels.find(m => m.id === settings.model);
+  const defaultCaps = defaultEntry ? capabilitiesFor(defaultEntry) : null;
   return {
     settings: safe,
     hasKey: Boolean(apiKey),
@@ -102,8 +115,16 @@ async function loadSnapshot(origin, tabId) {
     },
     profiles,
     modes: [...BUILT_IN_MODES, ...(Array.isArray(customModes) ? customModes : [])],
+    prompts: Array.isArray(prompts) ? prompts : [],
     dictionary: Array.isArray(dictionary) ? dictionary : [],
-    favourites: Array.isArray(favouriteModels) ? favouriteModels : [],
+    favourites,
+    modelCapabilities: {
+      id: settings.model,
+      known: Boolean(defaultCaps),
+      supportsResearch: defaultCaps ? defaultCaps.tools : null,
+      contextLength: defaultCaps?.contextLength ?? null
+    },
+    catalogueCached: cachedModels.length > 0,
     history: describeHistory(settings, historyEntries),
     historyEntries,
     consents
@@ -112,7 +133,22 @@ async function loadSnapshot(origin, tabId) {
 
 const handlers = {
   [MESSAGES.RUN_TASK]: async (msg, sender) => {
-    await requireEnabled(msg, sender);
+    const settings = await requireEnabled(msg, sender);
+    // Record which favourite was used so the in-widget selector can order by
+    // recency. Best effort: usage accounting must never break a request.
+    const usedModel = msg.payload?.model || settings.model;
+    if (usedModel) {
+      try {
+        const current = await getCollection(STORAGE_KEYS.FAVOURITE_MODELS, []);
+        const idOf = f => (typeof f === 'string' ? f : f?.id);
+        const before = Array.isArray(current) ? current.find(f => idOf(f) === usedModel) : null;
+        const next = recordUse(current, usedModel);
+        const after = next.find(f => f.id === usedModel);
+        if (after && after.useCount !== (Number(before?.useCount) || 0)) {
+          await setCollection(STORAGE_KEYS.FAVOURITE_MODELS, next);
+        }
+      } catch { /* usage is advisory */ }
+    }
     return runTask({ ...msg.payload, origin: msg.payload?.origin || originOf(sender) }, { sender });
   },
 
@@ -120,7 +156,12 @@ const handlers = {
 
   [MESSAGES.TEST_CONNECTION]: async (msg, sender) => {
     await requireEnabled(msg, sender, { allowUserInitiated: true });
-    return testConnection(msg.settings);
+    const result = await testConnection(msg.settings);
+    // A successful key test is an explicit user action, so warming the model
+    // catalogue here is within the user's request — and it means capability
+    // badges and researched review work immediately after onboarding.
+    try { await getCatalogue({ force: true }); } catch { /* advisory only */ }
+    return result;
   },
   [MESSAGES.LIST_MODELS]: async (msg, sender) => {
     await requireEnabled(msg, sender, { allowUserInitiated: true });
@@ -179,6 +220,25 @@ const handlers = {
     const list = (Array.isArray(existing) ? existing : []).filter(m => m.id !== msg.id);
     await setCollection(STORAGE_KEYS.MODES, list);
     return { modes: [...BUILT_IN_MODES, ...list] };
+  },
+
+  [MESSAGES.SAVE_PROMPT]: async msg => {
+    const existing = await getCollection(STORAGE_KEYS.PROMPTS, []);
+    const checked = validatePrompt(msg.prompt || {}, { existing: Array.isArray(existing) ? existing : [] });
+    if (!checked.ok) fail(checked.errors[0] || 'That prompt is not valid.', 'invalid_prompt', { errors: checked.errors });
+    const list = Array.isArray(existing) ? [...existing] : [];
+    const index = list.findIndex(p => p.id === checked.prompt.id);
+    if (index >= 0) list[index] = checked.prompt;
+    else list.push(checked.prompt);
+    await setCollection(STORAGE_KEYS.PROMPTS, list);
+    return { prompts: list };
+  },
+
+  [MESSAGES.DELETE_PROMPT]: async msg => {
+    const existing = await getCollection(STORAGE_KEYS.PROMPTS, []);
+    const prompts = (Array.isArray(existing) ? existing : []).filter(p => p.id !== msg.id);
+    await setCollection(STORAGE_KEYS.PROMPTS, prompts);
+    return { prompts };
   },
 
   [MESSAGES.SET_FAVOURITES]: async msg => {

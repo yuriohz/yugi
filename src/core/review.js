@@ -133,19 +133,50 @@ export function calibrateReview(review, { hasEvidence = false } = {}) {
   };
 }
 
-/** Remove sentences that assert certainty this product does not claim. */
+/**
+ * Remove certainty this product does not claim, at clause granularity.
+ *
+ * Review decision Q2: sentence granularity deleted useful observations that
+ * happened to share a sentence with a banned phrase. A sentence that contains
+ * a banned phrase now loses only the offending clause, provided what remains
+ * is substantial (at least MIN_KEEP_CHARS of non-punctuation). Otherwise the
+ * whole sentence is dropped, as before. Either way the removal is reported.
+ */
+export const MIN_KEEP_CHARS = 24;
+
+// A bare hyphen only splits a clause when spaced, so compound words survive.
+const CLAUSE_SPLIT = /\s*[,;:،؛—–]\s*|\s+-\s+/;
+
 export function stripCertainty(text) {
   const source = String(text ?? '');
   if (!source) return { text: '', stripped: [] };
 
   const stripped = [];
   const sentences = source.split(/(?<=[.!?؟])\s+/);
-  const kept = sentences.filter(sentence => {
+  const kept = [];
+
+  for (const sentence of sentences) {
     const lowered = sentence.toLowerCase();
-    const hit = BANNED_CERTAINTY.find(phrase => lowered.includes(phrase));
-    if (hit) { stripped.push(hit); return false; }
-    return true;
-  });
+    const hits = BANNED_CERTAINTY.filter(phrase => lowered.includes(phrase));
+    if (!hits.length) { kept.push(sentence); continue; }
+
+    stripped.push(...hits);
+    const ending = sentence.match(/[.!?؟]+\s*$/)?.[0] || '';
+    const body = sentence.slice(0, sentence.length - ending.length);
+    // A surviving clause must be free of every banned phrase, not just the
+    // first one found: a sentence can offend twice.
+    const survivors = body
+      .split(CLAUSE_SPLIT)
+      .map(clause => clause.trim())
+      .filter(clause => clause && !BANNED_CERTAINTY.some(phrase => clause.toLowerCase().includes(phrase)));
+    const remainder = survivors.join(', ').trim();
+
+    // Keep the surviving clauses only when they still say something on their
+    // own. A stub such as "and" is worse than nothing.
+    if (remainder.replace(/[\s,;:،؛—–-]/g, '').length >= MIN_KEEP_CHARS) {
+      kept.push(remainder + (ending.trim() || '.'));
+    }
+  }
 
   return { text: kept.join(' ').trim(), stripped };
 }

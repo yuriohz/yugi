@@ -172,7 +172,7 @@ registerTask(TASKS.REWRITE, ({ text, model, plan, profile, localeLayer, platform
   const findings = preflightFindings(text, { protectedTerms, script });
   const length = options.length || mode.controls?.defaultLength || LENGTH.SAME;
 
-  const modeLayer = [renderModeInstruction(mode), '', lengthInstruction(length), '', guardrailLayer(mode.guardrails)]
+  const modeLayer = [renderModeInstruction(mode), '', lengthInstruction(length), '', groundingLayer(options.grounding), '', guardrailLayer(mode.guardrails)]
     .filter(Boolean).join('\n');
 
   const system = composeSystemPrompt({
@@ -194,7 +194,16 @@ registerTask(TASKS.REWRITE, ({ text, model, plan, profile, localeLayer, platform
 
   return {
     timeoutMs: LIMITS.REQUEST_TIMEOUT_MS,
-    context: { text, protectedTerms, mode, arabic: script === 'arabic' || script === 'both' },
+    context: {
+      text,
+      protectedTerms,
+      mode,
+      arabic: script === 'arabic' || script === 'both',
+      grounded: Boolean(options.grounding),
+      groundingCounts: options.grounding
+        ? { supported: (options.grounding.supported || []).length, excluded: (options.grounding.excluded || []).length }
+        : null
+    },
     body: baseBody({
       model,
       plan,
@@ -223,6 +232,8 @@ registerTask(TASKS.REWRITE, ({ text, model, plan, profile, localeLayer, platform
         ...value,
         modeId: context.mode.id,
         length,
+        grounded: context.grounded,
+        groundingCounts: context.groundingCounts,
         guardrails: {
           ok: guard.ok,
           blocked: guard.blocked,
@@ -241,6 +252,34 @@ registerTask(TASKS.REWRITE, ({ text, model, plan, profile, localeLayer, platform
     }
   };
 });
+
+/**
+ * Constrain a rewrite to claims a review already supported.
+ *
+ * This is the second half of the Technical Review loop: after a researched
+ * review, the writer can ask for an improved response that may only use
+ * supported claims. Anything unchecked or contradicted is named as forbidden,
+ * so the model cannot quietly reassert it. When there is nothing supported,
+ * the layer says so rather than emitting an empty allow-list.
+ */
+export function groundingLayer(grounding) {
+  if (!grounding) return '';
+  const supported = (grounding.supported || []).map(c => String(c.text || c).trim()).filter(Boolean).slice(0, 20);
+  const excluded = (grounding.excluded || []).map(c => String(c.text || c).trim()).filter(Boolean).slice(0, 20);
+  const lines = ['## Grounded claims for this draft'];
+  if (supported.length) {
+    lines.push('You may only state these claims, which a review already checked against sources:');
+    for (const claim of supported) lines.push(`- ${claim}`);
+  } else {
+    lines.push('No claim in this text was supported by a source. Do not state any factual claim as true.');
+  }
+  if (excluded.length) {
+    lines.push('Do NOT assert any of these unchecked or contradicted claims:');
+    for (const claim of excluded) lines.push(`- ${claim}`);
+  }
+  lines.push('If the draft needs a fact not in the supported list, keep the original wording and say so in "warnings".');
+  return lines.join('\n');
+}
 
 /** Render the mode's declared guardrails into the prompt so the model sees them too. */
 export function guardrailLayer(guardrails = []) {

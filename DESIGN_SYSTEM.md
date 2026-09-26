@@ -217,14 +217,15 @@ Contains category, explanation, original, replacement, and Accept. “Why?” ex
 
 ### Technical verdict
 
-Uses one of four labels:
+Uses one of five labels, each with a one-line plain-language explainer shown beneath it:
 
-- Supported by available evidence
-- Reasoning is sound; facts need verification
-- Conclusion is not yet supported
-- Conflicts with available evidence
+- Supported by the provided context — follows from evidence given in this review.
+- Partially supported — partly follows; part of it still needs checking.
+- Cannot be verified from available evidence — could not be checked even with sources.
+- Needs verification — a factual claim about the outside world that has not been checked against a source.
+- Conflicts with the source — contradicts another claim in the text, or a source returned for this review.
 
-The verdict card must show whether web research was used.
+The verdict card must show whether web research was used. The labels live in `VERDICT_LABELS` and the explainers in `VERDICT_EXPLAINERS` (`src/core/constants.js`); the UI renders both so the calibrated vocabulary stays exact and legible.
 
 ### Source card
 

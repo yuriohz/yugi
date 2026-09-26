@@ -1,5 +1,6 @@
 import { MESSAGES, TASKS } from '../core/constants.js';
 import { ask } from './messaging.js';
+import { capabilityBadges } from './render.js';
 
 const $ = id => document.getElementById(id);
 const setStatus = (id, text, ok = true) => {
@@ -33,6 +34,7 @@ function showProfile(id) {
   if (!profile) return;
   $('profileName').value = profile.name || '';
   $('profileAudience').value = profile.audience || '';
+  $('profileLocale').value = ['ar', 'ar-EG'].includes(profile.locale) ? profile.locale : 'en-GB';
   $('profileVoice').value = profile.voiceDescription || '';
   $('profileSamples').value = (profile.samples || []).join('\n\n');
   $('profileProtected').value = (profile.protectedTerms || []).join(', ');
@@ -49,12 +51,21 @@ function renderFavourites() {
     const small = document.createElement('small');
     small.textContent = fav.id;
     label.append(title, small);
+    const badges = document.createElement('span');
+    badges.className = 'badges';
+    for (const badge of capabilityBadges(fav)) {
+      const pill = document.createElement('em');
+      pill.className = `badge badge-${badge.tone}`;
+      pill.textContent = badge.text;
+      badges.appendChild(pill);
+    }
+    label.appendChild(badges);
     const remove = document.createElement('button');
     remove.type = 'button';
     remove.textContent = 'Remove';
     remove.addEventListener('click', async () => {
-      const result = await ask(MESSAGES.SET_FAVOURITES, { remove: fav.id });
-      snapshot.favourites = result.favourites;
+      await ask(MESSAGES.SET_FAVOURITES, { remove: fav.id });
+      snapshot = await ask(MESSAGES.GET_STATE);
       renderFavourites();
     });
     item.append(label, remove);
@@ -102,6 +113,45 @@ function renderModes() {
   }
 }
 
+let editingPromptId = null;
+
+function renderPrompts() {
+  const list = $('promptList');
+  list.replaceChildren();
+  for (const prompt of snapshot.prompts || []) {
+    const item = document.createElement('li');
+    const label = document.createElement('div');
+    const title = document.createElement('strong');
+    title.textContent = prompt.name;
+    const small = document.createElement('small');
+    small.textContent = String(prompt.body || '').slice(0, 140);
+    label.append(title, small);
+    const actions = document.createElement('div');
+    const edit = document.createElement('button');
+    edit.type = 'button';
+    edit.textContent = 'Edit';
+    edit.style.color = '#0b9377';
+    edit.addEventListener('click', () => {
+      editingPromptId = prompt.id;
+      $('promptName').value = prompt.name;
+      $('promptBody').value = prompt.body;
+      $('promptMode').value = prompt.modeId || '';
+    });
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.textContent = 'Delete';
+    remove.addEventListener('click', async () => {
+      const result = await ask(MESSAGES.DELETE_PROMPT, { id: prompt.id });
+      snapshot.prompts = result.prompts;
+      if (editingPromptId === prompt.id) editingPromptId = null;
+      renderPrompts();
+    });
+    actions.append(edit, remove);
+    item.append(label, actions);
+    list.appendChild(item);
+  }
+}
+
 function renderDictionary() {
   const list = $('dictList');
   list.replaceChildren();
@@ -140,6 +190,7 @@ async function load() {
   fillProfileSelect();
   renderFavourites();
   renderModes();
+  renderPrompts();
   renderDictionary();
 }
 
@@ -183,10 +234,10 @@ $('test').addEventListener('click', async () => {
 
 $('addFav').addEventListener('click', async () => {
   try {
-    const result = await ask(MESSAGES.SET_FAVOURITES, {
+    await ask(MESSAGES.SET_FAVOURITES, {
       add: { id: $('favId').value.trim(), label: $('favLabel').value.trim() }
     });
-    snapshot.favourites = result.favourites;
+    snapshot = await ask(MESSAGES.GET_STATE);
     $('favId').value = '';
     $('favLabel').value = '';
     renderFavourites();
@@ -216,6 +267,7 @@ $('saveProfile').addEventListener('click', async () => {
         id: current.id,
         name: $('profileName').value,
         audience: $('profileAudience').value,
+        locale: $('profileLocale').value,
         voiceDescription: $('profileVoice').value,
         samples: $('profileSamples').value.split(/\n{2,}/).map(s => s.trim()).filter(Boolean),
         protectedTerms: splitTerms($('profileProtected').value)
@@ -233,6 +285,7 @@ $('newProfile').addEventListener('click', () => {
   $('profileSelect').value = '';
   $('profileName').value = '';
   $('profileAudience').value = '';
+  $('profileLocale').value = 'en-GB';
   $('profileVoice').value = '';
   $('profileSamples').value = '';
   $('profileProtected').value = '';
@@ -300,6 +353,28 @@ $('testMode').addEventListener('click', async () => {
     setStatus('modeStatus', 'Test finished. Check the output below — WriteRight, not the model, decides whether it passed.');
   } catch (error) {
     setStatus('modeStatus', error.message, false);
+  }
+});
+
+$('savePrompt').addEventListener('click', async () => {
+  try {
+    const result = await ask(MESSAGES.SAVE_PROMPT, {
+      prompt: {
+        id: editingPromptId || undefined,
+        name: $('promptName').value,
+        body: $('promptBody').value,
+        modeId: $('promptMode').value.trim() || null
+      }
+    });
+    snapshot.prompts = result.prompts;
+    editingPromptId = null;
+    $('promptName').value = '';
+    $('promptBody').value = '';
+    $('promptMode').value = '';
+    renderPrompts();
+    setStatus('promptStatus', 'Saved.');
+  } catch (error) {
+    setStatus('promptStatus', error.message, false);
   }
 });
 

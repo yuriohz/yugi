@@ -53,6 +53,11 @@ input:focus,select:focus,textarea:focus{border-color:#15c39a;box-shadow:0 0 0 3p
 }
 .list button{border:0;background:transparent;color:#d43e48;font-weight:700;cursor:pointer}
 .list small{display:block;color:#74817e;font-weight:400}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.badge{font-style:normal;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;background:#eef4ff;color:#3a65b8}
+.badge-good{background:#dff6ef;color:#08755f}
+.badge-bad{background:#fff0f1;color:#d43e48}
+.badge-muted{background:#f3f7f5;color:#74817e}
 .out{margin:12px 0 0;padding:12px;border-radius:8px;background:#f3f7f5;white-space:pre-wrap;font-size:12px}
 .file{display:inline-flex;align-items:center;position:relative;overflow:hidden}
 .file input{position:absolute;inset:0;opacity:0;cursor:pointer}

@@ -40,8 +40,8 @@ function paint() {
   siteBtn.disabled = !origin;
   tabBtn.disabled = !origin;
   if (origin) {
-    try { siteLabel.textContent = `Allow WriteRight on ${new URL(origin).host}`; }
-    catch { siteLabel.textContent = 'Allow WriteRight on the current site'; }
+    try { siteLabel.textContent = `Off for ${new URL(origin).host} only`; }
+    catch { siteLabel.textContent = 'Off for this site only'; }
   }
 }
 
@@ -66,9 +66,7 @@ globalBtn.addEventListener('click', () => toggle('global', globalBtn));
 siteBtn.addEventListener('click', () => toggle('website', siteBtn));
 tabBtn.addEventListener('click', () => toggle('tab', tabBtn));
 
-const open = () => chrome.runtime.openOptionsPage();
-document.getElementById('settings').addEventListener('click', open);
-document.getElementById('options').addEventListener('click', open);
+document.getElementById('settings').addEventListener('click', () => chrome.runtime.openOptionsPage());
 
 load().catch(error => {
   status.textContent = 'WriteRight could not load';
