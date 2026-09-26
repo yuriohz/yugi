@@ -197,13 +197,34 @@ Status values: `complete`, `in progress`, `blocked`, `not started`.
 
 | Field | Value |
 |---|---|
-| **Status** | not started |
+| **Status** | complete for everything executable here; **blocked** on a browser, a name, and a publisher account |
+| **Commit** | `f49414d` |
+| **Tests performed** | `npm run verify` — lint, secret scan, build, **461 unit** and **15 integration** assertions, all green. `npm run package` — validated runtime archive. |
+| **Acceptance criteria met** | ✅ Validated runtime-only ZIP: 17 entries, allow-list enforced, forbidden classes refused (source maps, tests, dotfiles, Markdown, `node_modules`, credential files). ✅ SHA-256 emitted to `release/*.zip.sha256`, file list to `release/MANIFEST.txt`. ✅ Remote-code refusal: remote `<script src>`, URL `import()`, `importScripts` from a URL, `eval` and `new Function` all fail the package step. ✅ Credential re-scan of every shipped file. ✅ Every manifest permission is checked against `docs/PERMISSIONS.md` and the package is refused if one is unexplained. ✅ Release notes, permission rationale, privacy disclosures, submission checklist and a manual Chrome test plan written. ✅ All docs reconciled with the runtime. |
+| **Acceptance criteria NOT met, and why** | ❌ **Real Chrome acceptance testing.** No Chrome or Chromium binary exists in this environment and the browser download endpoints are blocked at the network layer — `npx playwright install chromium` fails with `Download failure, code=1`, and `--with-deps` cannot locate `libnss3`, `libxkbcommon0` or `xvfb`. Recorded verbatim in `tests/browser/README.md`. ❌ **Runtime screenshots.** For the same reason none exist. The three images in `store-assets/` are mockup-derived and are labelled **not store-ready**; no mockup is presented as a screenshot anywhere. ❌ **Store submission.** Requires a publisher account and credentials that will never be requested. |
+| **Package** | `release/writeright-ai-writing-assistant-2.0.0.zip` · SHA-256 `54040bc9409422d57d6d30cf7457c04fea520291fb839b0a27245095eabdb633` |
+| **Doc corrections made** | `PRODUCT_PLAN_V2.md` §3 rewritten: it named `haidrrrry/humanize-ai-writing` as the anti-slop basis, which the user superseded with `petergyang/no-ai-slop`. The old reference is now recorded in `THIRD_PARTY_NOTICES.md` as referenced-but-not-included. `README.md` rewritten to describe the shipped runtime rather than v1 plus mockups, and its stale `writeright-extension.zip` link removed. `PRIVACY_POLICY.md` rewritten for v2. `STORE_LISTING.md` rewritten and its unusable screenshots flagged. Stale `arena/01a0dbec-yugi` branch references corrected across three files. |
+
+## Final state
+
+| | |
+|---|---|
+| Runs complete | **16 of 16** |
+| Unit assertions | 461, all passing |
+| Integration journeys | 15, all passing |
+| Lint / secret scan | clean over 136 files |
+| Build | 16 files, 204.3 kB |
+| Package | 17 entries, 68.2 kB, allow-list enforced |
+| `npm audit` | 0 vulnerabilities |
+| Blocked | real-browser testing, runtime screenshots, the final name, store submission |
 
 ## Environment constraints
 
 | Constraint | Effect | Recorded |
 |---|---|---|
-| No Chrome or Chromium binary is installed in the sandbox | Real-browser acceptance testing cannot run here. Browser-integration tests use a DOM harness; a reproducible manual Chrome script is provided instead. | Run 1 |
+| No Chrome or Chromium binary, and browser downloads blocked at the network layer | Real-browser acceptance testing and runtime screenshots cannot be produced here. `npx playwright install chromium` fails with `Download failure, code=1`; `--with-deps` cannot locate `libnss3`, `libxkbcommon0` or `xvfb`. Integration tests wire the real modules together through a scripted transport and a DOM harness; `docs/MANUAL_TEST_PLAN.md` is the script for the rest. | Runs 1 and 16 |
+| ICANN RDAP reachable, trademark registers not | Domain registration status is evidenced for 14 `.com` names. USPTO, UK IPO, EUIPO and WIPO could not be queried, so **no trademark search was performed**. | Run 15 |
+| No publisher account, and credentials are never requested | The Chrome Web Store submission is **prepared**, not made. | Run 16 |
 
 ## Honest claims register
 

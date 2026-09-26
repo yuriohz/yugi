@@ -70,6 +70,8 @@ WriteRight is not affiliated with or endorsed by Peter Yang.
 
 - **Source:** https://github.com/evanw/esbuild
 - **Licence:** MIT
+- **Version:** `^0.25.0` (raised from `^0.24.2` to clear GHSA-67mh-4wv8-2f99, a moderate
+  advisory affecting esbuild's development server, which this project does not use)
 - **Use:** development-time bundling only. esbuild is a `devDependency`. No part of esbuild,
   and no third-party runtime dependency of any kind, is shipped inside the published
   extension package. The packaged extension contains only first-party JavaScript, HTML, CSS,

@@ -11,10 +11,10 @@
     "test:browser": "node --test \"tests/browser/**/*.test.js\"",
     "lint": "node tools/lint.js",
     "scan:secrets": "node tools/scan-secrets.js",
-    "package": "node tools/package.js",
-    "verify": "npm run lint && npm run scan:secrets && npm run build && npm test"
+    "package": "node build.js && node tools/package.js",
+    "verify": "npm run lint && npm run scan:secrets && npm run build && npm test && npm run test:browser"
   },
   "devDependencies": {
-    "esbuild": "^0.24.2"
+    "esbuild": "^0.25.12"
   }
 }
