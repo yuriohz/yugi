@@ -146,7 +146,21 @@ in `npm run verify`; this section is the visual and interaction pass.
 | K12 | Settings → saved prompts | Add, edit, delete, export, and re-import a prompt; a prompt asking for invented facts is refused at save | ☐ |
 | K13 | Popup | A single "Open settings" button; the site toggle reads "Off for {host} only" | ☐ |
 
-## L. Screenshots for the store
+## L. Provider selection
+
+Use your own valid keys; these live checks have not been performed by automation.
+
+| # | Step | Expected | Pass |
+|---|---|---|---|
+| L1 | Switch provider in onboarding | Key label, link, placeholder, models and research note change; old typed key clears | ☐ |
+| L2 | Test Google with Gemini 2.5 Flash, then proofread/rewrite | Google chat endpoint; Bearer auth; no X-Title or usage.include; successful result | ☐ |
+| L3 | Select Technical Review with Google | Research disabled with provider-specific reason; forced researched request refused with zero calls | ☐ |
+| L4 | Switch back to OpenRouter and enter its key | Attribution and usage accounting remain; research available only for compatible models | ☐ |
+| L5 | Blank, known-default and explicit custom endpoints in options | Known defaults display/save blank; blank resolves to provider default; custom URL retained | ☐ |
+| L6 | Refresh catalogues, switch provider, then pause extension and open widget | Separate caches; Google header auth without key in URL; cache-only snapshots make no calls while paused | ☐ |
+| L7 | Add bare Google/vendor-model OpenRouter favourites; export/import | Provider-specific validation; provider round-trip; bogus provider skipped with warning; no credentials exported | ☐ |
+
+## M. Screenshots for the store
 
 Only after everything above passes:
 

@@ -378,3 +378,15 @@ The v1 questions are answered in §5. These are the ones v2 raises.
 8. **Is 461 unit assertions the right shape of coverage?** The bias is heavily toward
    negative paths and refusals. Is anything important untested that is *not* blocked on a
    browser?
+
+
+## Provider recreation addendum — 26 September 2026
+
+Rebuilt the unavailable provider commit from the supplied behaviour specification,
+on master `7f8b2dc`, on `arena/01a0de98-yugi`. This is not the original commit object.
+Google AI Studio joins OpenRouter in setup and options. Provider registry, routing,
+header-authenticated catalogue, isolated cache, usage omission, research refusal,
+favourites, transfer and all provider disclosures are covered by regression tests.
+No live paid-provider call was made. Real Chrome acceptance remains outstanding;
+the attempted Playwright Chromium download was blocked by a TLS connection reset.
+All marketing images remain explicitly labelled design mockups, not runtime screenshots.

@@ -1,3 +1,4 @@
+import { getProvider } from '../core/providers.js';
 import { MESSAGES } from '../core/constants.js';
 import { ask } from './messaging.js';
 import { popupCopy } from './render.js';
@@ -25,7 +26,9 @@ async function currentTab() {
 }
 
 function paint() {
+  document.getElementById('privacyLine').textContent = `Your key stays on this device. Text is sent to ${getProvider(snapshot?.settings?.provider).name} (or your configured endpoint) only when you request it.`;
   const copy = popupCopy({
+    provider: snapshot?.settings?.provider,
     hasKey: Boolean(snapshot?.hasKey),
     shutdown: snapshot?.shutdown || {}
   });

@@ -5,7 +5,8 @@
  * transport is injectable so the unit tests can drive every branch without a
  * network.
  */
-import { DEFAULT_ENDPOINT, OPENROUTER_MODELS_URL, OPENROUTER_HEADERS, LIMITS } from '../core/constants.js';
+import { getProvider, normalizeGoogleModels } from '../core/providers.js';
+import { GOOGLE_MODELS_URL, DEFAULT_ENDPOINT, OPENROUTER_MODELS_URL, OPENROUTER_HEADERS, LIMITS } from '../core/constants.js';
 
 export class ApiError extends Error {
   constructor(message, { code = 'api_error', status = 0, retryable = false, body = '' } = {}) {
@@ -29,12 +30,12 @@ export function backoffDelay(attempt, { base = LIMITS.RETRY_BASE_MS, max = LIMIT
   return Math.round(exponential * (0.5 + random() * 0.5));
 }
 
-function headersFor(settings) {
+function headersFor(settings, endpoint) {
   const headers = {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${settings.apiKey}`
   };
-  if (String(settings.endpoint || '').includes('openrouter.ai')) {
+  if (new URL(endpoint).hostname === 'openrouter.ai') {
     Object.assign(headers, OPENROUTER_HEADERS);
   }
   return headers;
@@ -62,10 +63,11 @@ export async function chatCompletion({
   random = Math.random
 }) {
   if (!settings?.apiKey) {
-    throw new ApiError('Add your OpenRouter API key in WriteRight settings.', { code: 'no_key' });
+    throw new ApiError(`Add your ${getProvider(settings?.provider).name} API key in WriteRight settings.`, { code: 'no_key' });
   }
   const doFetch = fetchImpl || globalThis.fetch;
-  const endpoint = settings.endpoint || DEFAULT_ENDPOINT;
+  const provider = getProvider(settings.provider);
+  const endpoint = !settings.endpoint || settings.endpoint === DEFAULT_ENDPOINT ? provider.defaultEndpoint : settings.endpoint;
 
   let lastError;
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -81,7 +83,7 @@ export async function chatCompletion({
     try {
       const response = await doFetch(endpoint, {
         method: 'POST',
-        headers: headersFor(settings),
+        headers: headersFor(settings, endpoint),
         body: JSON.stringify(body),
         signal: controller.signal
       });
@@ -89,7 +91,7 @@ export async function chatCompletion({
       if (response.ok) return await response.json();
 
       const text = await safeText(response);
-      const error = new ApiError(describeStatus(response.status, text), {
+      const error = new ApiError(describeStatus(response.status, text, provider.name), {
         code: `http_${response.status}`,
         status: response.status,
         retryable: isRetryableStatus(response.status),
@@ -133,30 +135,32 @@ async function safeText(response) {
   try { return await response.text(); } catch { return ''; }
 }
 
-export function describeStatus(status, body) {
+export function describeStatus(status, body, providerName = 'OpenRouter') {
   let detail = body;
   try { detail = JSON.parse(body)?.error?.message || body; } catch { /* plain text */ }
   const short = String(detail || '').slice(0, 220);
   switch (status) {
-    case 401: return `OpenRouter rejected the API key (401). ${short}`;
-    case 402: return `Your OpenRouter account has insufficient credit (402). ${short}`;
+    case 401: return `${providerName} rejected the API key (401). ${short}`;
+    case 402: return `${providerName} account has insufficient credit (402). ${short}`;
     case 403: return `Access to this model is not permitted (403). ${short}`;
     case 404: return `The model or endpoint was not found (404). ${short}`;
-    case 429: return `OpenRouter is rate limiting this key (429). ${short}`;
+    case 429: return `${providerName} is rate limiting this key (429). ${short}`;
     default: return `Request failed (${status}). ${short}`;
   }
 }
 
 /** Fetch the OpenRouter model catalogue. Failure degrades, it does not throw. */
-export async function listModels({ fetchImpl, timeoutMs = 15_000 } = {}) {
+export async function listModels({ provider = 'openrouter', apiKey = '', fetchImpl, timeoutMs = 15_000 } = {}) {
+  const google = getProvider(provider).id === 'google';
+  if (google && !apiKey) return { ok: false, models: [], error: 'Add your Google AI Studio key to load models.' };
   const doFetch = fetchImpl || globalThis.fetch;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await doFetch(OPENROUTER_MODELS_URL, { signal: controller.signal });
+    const response = await doFetch(google ? `${GOOGLE_MODELS_URL}?pageSize=100` : OPENROUTER_MODELS_URL, { signal: controller.signal, ...(google ? { headers: { 'x-goog-api-key': apiKey } } : {}) });
     if (!response.ok) return { ok: false, models: [], error: `Catalogue unavailable (${response.status}).` };
     const data = await response.json();
-    return { ok: true, models: Array.isArray(data?.data) ? data.data : [] };
+    return { ok: true, models: google ? normalizeGoogleModels(data) : Array.isArray(data?.data) ? data.data : [] };
   } catch (err) {
     return { ok: false, models: [], error: `Catalogue unavailable: ${err?.message || err}` };
   } finally {

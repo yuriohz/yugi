@@ -10,6 +10,7 @@
  *   6. summarising usage and cost,
  *   7. tracking in-flight requests so they can be cancelled.
  */
+import { getProvider } from '../core/providers.js';
 import { TASKS, LIMITS } from '../core/constants.js';
 import { getSettings } from '../core/storage.js';
 import { isAllowed } from '../core/shutdown.js';
@@ -83,10 +84,14 @@ export async function runTask(payload = {}, deps = {}) {
     throw new ApiError(gate.reason, { code: `shutdown_${gate.blockedBy}` });
   }
 
-  const model = payload.model || settings.model;
+  const provider = getProvider(settings.provider);
+  if (task === TASKS.RESEARCH_REVIEW && !provider.supportsResearch) {
+    throw new ApiError(`Web research is not available on ${provider.name}. Switch to OpenRouter for researched review.`, { code: 'provider_no_research' });
+  }
+  const model = payload.model || settings.model || provider.defaultModel;
   const rawModel = deps.modelEntry !== undefined
     ? deps.modelEntry
-    : await getModelCapabilities(model, { fetchImpl: deps.fetchImpl, area: deps.area }).catch(() => null);
+    : await getModelCapabilities(model, { provider: provider.id, apiKey: settings.apiKey, fetchImpl: deps.fetchImpl, area: deps.area }).catch(() => null);
   const caps = rawModel ? capabilitiesFor(rawModel) : null;
 
   const wants = deps.wants || { structuredOutput: true, tools: task === TASKS.RESEARCH_REVIEW };
@@ -120,7 +125,7 @@ export async function runTask(payload = {}, deps = {}) {
 
   const build = deps.buildRequest || buildRequest;
   const request = await build({
-    ...payload, model, settings, plan, capabilities: caps, mode, profile, localeLayer,
+    ...payload, model, settings, provider, plan, capabilities: caps, mode, profile, localeLayer,
     platform: payload.platform || null
   });
 
@@ -179,8 +184,8 @@ function finalise({ task, response, request, caps, warnings }) {
 /** One tiny live call used by onboarding and settings to verify a key. */
 export async function testConnection(candidate = {}, deps = {}) {
   const base = deps.settings || await getSettings(deps.area);
-  const settings = { ...base, ...candidate };
-  if (!settings.apiKey) throw new ApiError('Enter an OpenRouter API key first.', { code: 'no_key' });
+  const settings = { ...base, ...Object.fromEntries(Object.entries(candidate).filter(([, value]) => value !== undefined)) };
+  if (!settings.apiKey) throw new ApiError(`Enter a ${getProvider(settings.provider).name} API key first.`, { code: 'no_key' });
 
   const response = await chatCompletion({
     settings,

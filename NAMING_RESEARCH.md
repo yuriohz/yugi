@@ -228,3 +228,32 @@ All accessed 26 September 2026.
 - `https://www.rekhtadictionary.com/meaning-of-tanqiih` — lexical confirmation of *tanqīḥ*
 - `https://developer.chrome.com/docs/webstore/branding` — Chrome Web Store naming rules, confirming no Google trademark may appear in the name
 - `https://branddb.wipo.int/` — attempted and **failed**; recorded as a gap, not as a clear result
+
+
+## 8. Eliminated descriptive candidates — rechecked 26 September 2026
+
+| Candidate | Decision against §2 | Conflicts / misleading meaning |
+|---|---|---|
+| writewithme | Reject: 6 (length), 7 (word-boundary/spacing ambiguity), 8 (descriptive) | Live [writewithme.app](https://writewithme.app) collaborative-writing product and [dabit3/write-with-me](https://github.com/dabit3/write-with-me) editor; also fails distinctiveness criterion 9 |
+| writeforme | Reject: 6, 7, 8 | Same-function Chrome extension **Write for me ✨**, Translapp Android writing assistant, and live [writeforme.io](https://writeforme.io) content company; also fails 9 |
+| RewriteFree | Reject: 6, 7, 8; also 5 (misleading English promise) | “Free” suggests no cost, while external model providers may charge; not a truthful product promise |
+
+Direct page-fetch rechecks confirmed the writing products above, the
+[Chrome listing](https://chromewebstore.google.com/detail/write-for-me-%E2%9C%A8/dmnnjnnhhnaiepoaajhmdhbmdfadlifb)
+and [Translapp listing](https://play.google.com/store/apps/details?id=com.translapp.writing.tools&hl=en).
+No reliance on shell TLS requests was needed.
+
+Domain evidence (not trademark clearance):
+- [writewithme.com RDAP](https://rdap.verisign.com/com/v1/domain/writewithme.com)
+  confirms registration on 28 September 2017. The prior handoff described it as
+  parked; the website fetch failed here, so current parking is **not independently confirmed**.
+- [writeforme.com RDAP](https://rdap.verisign.com/com/v1/domain/writeforme.com)
+  confirms registration on 12 February 2003.
+- The handoff reported RewriteFree.com, usewritewithme.com, usewriteforme.com and
+  userewritefree.com as unregistered. Re-fetches of their Verisign RDAP URLs returned
+  blank documents rather than usable records/status codes, so that availability
+  claim is **not independently verified in this session**. Check a registrar before purchase.
+
+No trademark-register search or legal clearance has been performed. Domain
+availability does not establish the right to use a brand. None of these three names
+is recommended, regardless of domain availability.

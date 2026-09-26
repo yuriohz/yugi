@@ -3,7 +3,7 @@
 **Last updated: 26 September 2026 · applies to version 2.0.0**
 
 WriteRight is a browser extension that improves text you are writing. It uses **your own**
-OpenRouter API key. There is no WriteRight server, no WriteRight account, and no analytics.
+OpenRouter or Google AI Studio API key. There is no WriteRight server, no WriteRight account, and no analytics.
 
 ---
 
@@ -88,15 +88,17 @@ Switching history off deletes what was already stored.
 
 ## Third parties
 
-### OpenRouter, or whichever endpoint you configure
+### OpenRouter, Google AI Studio, or whichever endpoint you configure
 
-The text you submit is processed by OpenRouter and by the model provider you selected.
+The text you submit is processed by your selected provider: OpenRouter (and its selected model provider) or Google AI Studio. With a custom endpoint, that endpoint processes it. Google model catalogue requests send the API key in a header, never a URL.
 Their handling is governed by their policies, not this one:
 
 - <https://openrouter.ai/privacy>
 - <https://openrouter.ai/terms>
 
-If you use **researched Technical Review**, OpenRouter additionally performs a web search
+Google API data handling is governed by [Google’s Gemini API terms](https://ai.google.dev/gemini-api/terms); review the terms for your account tier before sending sensitive text.
+
+If you use **researched Technical Review** (OpenRouter only), OpenRouter additionally performs a web search
 on your behalf using its `openrouter:web_search` server tool, which involves a search
 provider. This never runs unless you switch research on for that specific run, and the
 cost and the tool are disclosed to you before it runs.

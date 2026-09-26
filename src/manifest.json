@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "WriteRight — AI Writing Assistant",
   "version": "2.0.0",
-  "description": "Rewrite, review and proofread anywhere you type, in English or Arabic, using your own OpenRouter key.",
+  "description": "Rewrite, review and proofread anywhere you type, in English or Arabic, using your own OpenRouter or Google AI Studio key.",
   "minimum_chrome_version": "114",
   "homepage_url": "https://github.com/yuriohz/yugi",
   "permissions": ["storage", "activeTab", "scripting"],

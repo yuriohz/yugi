@@ -28,17 +28,21 @@
     </nav>
 
     <section id="connection">
-      <h2>OpenRouter connection</h2>
+      <h2>AI connection</h2>
       <p class="hint">Your key stays in Chrome’s local extension storage and is sent only to the endpoint you configure. WriteRight has no server of its own.</p>
-      <label>Endpoint <input id="endpoint" type="url" placeholder="https://openrouter.ai/api/v1/chat/completions"></label>
-      <label>API key
+      <label>Provider <select id="provider"><option value="openrouter">OpenRouter</option><option value="google">Google AI Studio</option></select></label>
+      <p class="hint" id="researchNote"></p>
+      <label>Endpoint (optional; blank uses provider default) <input id="endpoint" type="url" placeholder="https://openrouter.ai/api/v1/chat/completions"></label>
+      <label><span id="keyLabel">API key</span>
         <div class="secret">
           <input id="apiKey" type="password" placeholder="sk-or-…" autocomplete="off">
           <button id="reveal" type="button">Show</button>
         </div>
       </label>
+      <p class="hint"><a id="keyLink" href="https://openrouter.ai/settings/keys" target="_blank" rel="noopener noreferrer">Get an API key</a></p>
+      <datalist id="providerModels"></datalist>
       <div class="row">
-        <label>Default model <input id="model" placeholder="openai/gpt-4o-mini"></label>
+        <label>Default model <input id="model" list="providerModels" placeholder="openai/gpt-4o-mini"></label>
         <label>Locale
           <select id="locale">
             <option value="en-GB">British English</option>
@@ -57,7 +61,7 @@
 
     <section id="writing">
       <h2>Favourite models</h2>
-      <p class="hint">The in-page selector shows this list. Ids look like <code>vendor/model</code>.</p>
+      <p class="hint">The in-page selector shows this list. <span id="modelHint">Ids look like vendor/model.</span></p>
       <div class="row">
         <label>Add a model <input id="favId" placeholder="anthropic/claude-3.5-sonnet"></label>
         <label>Label <input id="favLabel" placeholder="Careful editing"></label>

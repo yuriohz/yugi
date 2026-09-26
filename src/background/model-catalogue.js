@@ -6,31 +6,33 @@
  */
 import { STORAGE_KEYS } from '../core/constants.js';
 import { getCollection, setCollection } from '../core/storage.js';
-import { FALLBACK_CATALOGUE, FALLBACK_NOTICE } from '../core/model-compat.js';
+import { fallbackCatalogueFor, getProvider } from '../core/providers.js';
+import { FALLBACK_NOTICE } from '../core/model-compat.js';
 import { listModels } from './openrouter.js';
 
+const cacheKey = provider => getProvider(provider).id === 'openrouter' ? STORAGE_KEYS.MODEL_CACHE : `${STORAGE_KEYS.MODEL_CACHE}:${getProvider(provider).id}`;
 const CACHE_TTL_MS = 12 * 60 * 60 * 1000;
 
 /**
  * @returns {Promise<{models: object[], source: 'network'|'cache'|'fallback', notice: string}>}
  */
-export async function getCatalogue({ fetchImpl, area, now = Date.now, force = false } = {}) {
-  const cached = await getCollection(STORAGE_KEYS.MODEL_CACHE, null, area).catch(() => null);
+export async function getCatalogue({ provider = 'openrouter', apiKey = '', fetchImpl, area, now = Date.now, force = false } = {}) {
+  const cached = await getCollection(cacheKey(provider), null, area).catch(() => null);
   if (!force && cached?.models?.length && now() - (cached.fetchedAt || 0) < CACHE_TTL_MS) {
     return { models: cached.models, source: 'cache', notice: '' };
   }
 
-  const result = await listModels({ fetchImpl });
+  const result = await listModels({ fetchImpl, provider, apiKey });
   if (result.ok && result.models.length) {
     const models = result.models.map(trimEntry);
-    await setCollection(STORAGE_KEYS.MODEL_CACHE, { fetchedAt: now(), models }, area).catch(() => {});
+    await setCollection(cacheKey(provider), { fetchedAt: now(), models }, area).catch(() => {});
     return { models, source: 'network', notice: '' };
   }
 
   if (cached?.models?.length) {
     return { models: cached.models, source: 'cache', notice: 'Showing the last catalogue WriteRight downloaded. It may be out of date.' };
   }
-  return { models: FALLBACK_CATALOGUE.map(trimEntry), source: 'fallback', notice: FALLBACK_NOTICE };
+  return { models: fallbackCatalogueFor(provider).map(trimEntry), source: 'fallback', notice: FALLBACK_NOTICE.replace('OpenRouter', getProvider(provider).name) };
 }
 
 /** Keep only what WriteRight needs, so the cache stays small. */
@@ -57,8 +59,8 @@ function trimEntry(model) {
  *
  * @returns {Promise<{models: object[], fetchedAt: number}>}
  */
-export async function getCachedCatalogue({ area } = {}) {
-  const cached = await getCollection(STORAGE_KEYS.MODEL_CACHE, null, area).catch(() => null);
+export async function getCachedCatalogue({ area, provider = 'openrouter' } = {}) {
+  const cached = await getCollection(cacheKey(provider), null, area).catch(() => null);
   if (cached?.models?.length) return { models: cached.models, fetchedAt: cached.fetchedAt || 0 };
   return { models: [], fetchedAt: 0 };
 }

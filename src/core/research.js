@@ -1,3 +1,4 @@
+import { getProvider } from './providers.js';
 /**
  * Researched Technical Review.
  *
@@ -298,14 +299,14 @@ export function supportedClaimsOnly(result) {
 }
 
 /** Pre-flight disclosure shown before research runs. */
-export function researchDisclosure({ research = {}, pricing = null, inputChars = 0 }) {
+export function researchDisclosure({ provider = 'openrouter', research = {}, pricing = null, inputChars = 0 }) {
   const maxResults = clampInt(research.maxResults, 1, 20, 5);
   return {
     toolId: WEB_SEARCH_TOOL,
     maxResults,
     message: [
-      `Researched review sends your selected text to the model and lets it run up to ${maxResults} web search${maxResults === 1 ? '' : 'es'} through OpenRouter.`,
-      'Web search is charged by OpenRouter on top of the model tokens.',
+      `Researched review sends your selected text to the model and lets it run up to ${maxResults} web search${maxResults === 1 ? '' : 'es'} through ${getProvider(provider).name}.`,
+      `Web search is charged by ${getProvider(provider).name} on top of the model tokens.`,
       'Search results are treated as untrusted data and are never followed as instructions.'
     ].join(' '),
     estimate: {

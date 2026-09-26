@@ -1,3 +1,4 @@
+import { isKnownProvider } from './providers.js';
 /**
  * Settings import and export.
  *
@@ -44,6 +45,7 @@ export function buildExport(state = {}) {
     // Stated in the file itself, so anyone who opens it can see the promise.
     notice: 'This file contains WriteRight settings only. It does not contain your API key, your drafts, or any text from the pages you visited.',
     settings: {
+      provider: settings.provider || 'openrouter',
       endpoint: settings.endpoint,
       model: settings.model,
       locale: settings.locale,
@@ -203,16 +205,20 @@ export function planImport(text, current = {}) {
   };
 }
 
-const IMPORTABLE_SETTINGS = ['endpoint', 'model', 'locale', 'defaultModeId', 'activeProfileId', 'research', 'context', 'ui', 'historyPreferences'];
+const IMPORTABLE_SETTINGS = ['provider', 'endpoint', 'model', 'locale', 'defaultModeId', 'activeProfileId', 'research', 'context', 'ui', 'historyPreferences'];
 
 function importSettings(raw, warnings) {
   if (!raw || typeof raw !== 'object') return {};
   const out = {};
   for (const key of IMPORTABLE_SETTINGS) {
     if (raw[key] === undefined) continue;
+    if (key === 'provider' && !isKnownProvider(raw.provider)) {
+      warnings.push('Unknown provider was ignored.');
+      continue;
+    }
     if (key === 'endpoint') {
       const endpoint = String(raw.endpoint);
-      if (!/^https:\/\//i.test(endpoint)) {
+      if (endpoint && !/^https:\/\//i.test(endpoint)) {
         warnings.push('The endpoint in that file was ignored because it is not an https URL.');
         continue;
       }

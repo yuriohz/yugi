@@ -5,6 +5,7 @@
  * real capabilities from the catalogue, and marks a favourite as unavailable
  * rather than hiding it, so the user understands why a model disappeared.
  */
+import { getProvider } from './providers.js';
 import { capabilitiesFor } from './model-compat.js';
 
 export const FAVOURITES_LIMIT = 20;
@@ -21,15 +22,16 @@ export function makeFavourite(input) {
 }
 
 /** OpenRouter model ids are `vendor/model` with optional `:variant`. */
-export function isValidModelId(id) {
+export function isValidModelId(id, provider = 'openrouter') {
+  if (getProvider(provider).id === 'google') return /^[a-z0-9][a-z0-9._-]*$/i.test(String(id ?? '').trim());
   return /^[a-z0-9][a-z0-9._-]*\/[a-z0-9][a-z0-9._-]*(?::[a-z0-9-]+)*$/i.test(String(id ?? '').trim());
 }
 
-export function addFavourite(favourites, input) {
+export function addFavourite(favourites, input, provider = 'openrouter') {
   const favourite = makeFavourite(input);
   if (!favourite.id) return { ok: false, favourites: list(favourites), error: 'Choose a model first.' };
-  if (!isValidModelId(favourite.id)) {
-    return { ok: false, favourites: list(favourites), error: `“${favourite.id}” is not a valid OpenRouter model id. Ids look like vendor/model.` };
+  if (!isValidModelId(favourite.id, provider)) {
+    return { ok: false, favourites: list(favourites), error: `“${favourite.id}” is not a valid ${getProvider(provider).name} model id. Ids look like ${getProvider(provider).modelIdHint}.` };
   }
   const current = list(favourites);
   if (current.some(f => f.id === favourite.id)) {
@@ -69,7 +71,7 @@ export function recordUse(favourites, id, now = Date.now()) {
  * unavailable, because silently dropping it would leave the user wondering
  * where their model went.
  */
-export function decorateFavourites(favourites, catalogue = [], { currentModel = null } = {}) {
+export function decorateFavourites(favourites, catalogue = [], { currentModel = null, provider = 'openrouter' } = {}) {
   const byId = new Map(catalogue.map(m => [m.id, m]));
   return list(favourites).map(favourite => {
     const entry = byId.get(favourite.id);
@@ -80,7 +82,7 @@ export function decorateFavourites(favourites, catalogue = [], { currentModel = 
       displayName: favourite.label || caps?.name || favourite.id,
       capabilities: caps,
       selected: favourite.id === currentModel,
-      unavailableReason: entry ? '' : 'This model is not in the current OpenRouter catalogue. It may have been renamed or withdrawn.',
+      unavailableReason: entry ? '' : `This model is not in the current ${getProvider(provider).name} catalogue. It may have been renamed or withdrawn.`,
       supportsResearch: caps ? caps.tools : null,
       contextLength: caps?.contextLength ?? null
     };

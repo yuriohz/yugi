@@ -256,3 +256,24 @@ Statements this project will not make, and how they are enforced:
 | "You are right" | `VERDICTS`/`VERDICT_LABELS` vocabulary in `src/core/constants.js`; validation in later runs |
 | Chrome Web Store submission is complete | Submission is described as *prepared*. It is not complete unless actually submitted through an authorised publisher account. |
 | The product is legally cleared to use a given name | Run 15 produces research, not legal clearance. |
+
+## Google AI Studio provider — 26 September 2026
+
+**Branch:** `arena/01a0de98-yugi`, recreated from master `7f8b2dc` using the
+provided specification because the original commit/bundle was unavailable.
+
+- Registry and explicit provider capabilities; Google OpenAI-compatible transport,
+  Bearer chat authentication, header-only catalogue authentication, isolated caches.
+- Google researched review blocked before catalogue/network work; no usage.include.
+- Provider-aware onboarding, options, favourites, transfer, widget and popup copy.
+- Known endpoint defaults display/save blank; explicit custom endpoints remain intact.
+- 8 registry tests + 15 routing tests added. `npm run verify`: **515/515 unit,
+  16/16 journey tests, lint clean (145 files), secret scan clean, 17-file build 404.8 kB**.
+  The earlier handoff's 402.8 kB is not this recreation's build size.
+- All 11 mockup PNGs re-rendered with `@resvg/resvg-js` and `loadSystemFonts: true`;
+  reviewed as a contact sheet plus full-size changed layouts. Replaced unsupported
+  foreignObject text in previews 02, 05 and 06. Images explicitly say they are mockups.
+- No real provider calls or full Chrome acceptance completed. Chromium download
+  failed with TLS ECONNRESET; the 16 journey tests simulate browser/network boundaries.
+- Naming appendix records confirmed collisions and distinguishes inconclusive domain
+  rechecks from the earlier handoff's claims. No trademark clearance is claimed.
