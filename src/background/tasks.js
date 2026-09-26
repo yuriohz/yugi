@@ -11,6 +11,8 @@ import { TASKS, LIMITS } from '../core/constants.js';
 import { composeSystemPrompt, composeUserMessage } from '../core/prompts.js';
 import { schemaDescriptionFor } from '../core/task-schemas.js';
 import { detectSlop } from '../core/slop-detector.js';
+import { detectLocalIssues, mergeIssues } from '../core/local-issues.js';
+import { resolveLocale } from '../core/locale.js';
 import { OPERATION, GUARDRAILS, LENGTH, lengthInstruction } from '../core/modes.js';
 import { enforceGuardrails } from '../core/guardrails.js';
 import { ApiError } from './openrouter.js';
@@ -48,8 +50,10 @@ export function baseBody({ model, plan, messages, temperature = 0.2, maxTokens, 
 
 // ---------------------------------------------------------------- proofread
 
-registerTask(TASKS.PROOFREAD, ({ text, settings, model, plan, profile, localeLayer, platform }) => {
+registerTask(TASKS.PROOFREAD, ({ text, settings, model, plan, profile, localeLayer, platform, options = {} }) => {
   const protectedTerms = profile?.protectedTerms || [];
+  const { locale } = resolveLocale({ text, settings, profile });
+  const dictionary = options.dictionary || [];
   const system = composeSystemPrompt({
     mode: PROOFREAD_MODE,
     profile,
@@ -63,7 +67,7 @@ registerTask(TASKS.PROOFREAD, ({ text, settings, model, plan, profile, localeLay
 
   return {
     timeoutMs: LIMITS.REQUEST_TIMEOUT_MS,
-    context: { text, protectedTerms },
+    context: { text, protectedTerms, locale, dictionary },
     body: baseBody({
       model,
       plan,
@@ -74,7 +78,16 @@ registerTask(TASKS.PROOFREAD, ({ text, settings, model, plan, profile, localeLay
       ]
     }),
     postProcess: (value, context) => ({
-      issues: validateIssues(value.issues, context.text, context.protectedTerms)
+      // Model issues and deterministic local issues are merged; the model wins
+      // wherever the two overlap.
+      issues: mergeIssues(
+        validateIssues(value.issues, context.text, context.protectedTerms),
+        detectLocalIssues(context.text, {
+          locale: context.locale,
+          protectedTerms: context.protectedTerms,
+          dictionary: context.dictionary
+        })
+      )
     })
   };
 });

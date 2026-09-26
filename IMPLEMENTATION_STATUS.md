@@ -76,7 +76,12 @@ Status values: `complete`, `in progress`, `blocked`, `not started`.
 
 | Field | Value |
 |---|---|
-| **Status** | not started |
+| **Status** | complete |
+| **Commit** | `ff77c74` |
+| **Tests performed** | `npm run verify`; 254 unit assertions total. New: `british.test.js` (17), `locale-bidi.test.js` (24), `local-issues.test.js` (10). |
+| **Acceptance criteria** | ✅ Default locale is `en-GB`; `color`, `center`, `catalog`, `analyze`, `traveled` and American date order are corrected with exact offsets, capitalisation preserved. `-ize` is advisory because Oxford style accepts it; meaning-sensitive pairs (`program`/`programme`, `license`/`licence`, `check`/`cheque`) are advisory with an explanation rather than a silent swap. ✅ Arabic, Latin and mixed content are detected; mixed content resolves to the dominant script rather than first-strong. ✅ Casual targets Egyptian Arabic (`ar-EG`), the other four target MSA (`ar`); the script of the text overrides the configured locale. ✅ Latin runs, URLs, emails, code spans, paths and @handles inside Arabic are wrapped in FSI/PDI isolates; isolation is presentational and reversible via `stripIsolates`. ✅ Arabic-Indic and Western digits compare equal in the fidelity checker, and Arabic orthographic variants are not treated as meaning changes. |
+| **Remaining issues** | Latin punctuation inside Arabic is corrected only where Arabic surrounds it, so a comma inside an embedded English clause is left alone. This is deliberate and asserted. |
+| **Evidence** | `content.css` mirrors the badge, panel, tab counter, accept button and mobile layout under `[dir="rtl"]`, sets an Arabic-capable font stack with a larger line box, and applies `unicode-bidi:isolate` to every element that renders user text. `content.js` sets the widget direction from the dominant script on every render and escapes isolated text through `escapeHtml`. |
 
 ### Run 6 — Technical Review, logic-only
 

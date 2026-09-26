@@ -6,6 +6,7 @@
  */
 import { MESSAGES, TASKS } from '../core/constants.js';
 import { escapeHtml } from '../core/escape.js';
+import { resolveDirection, isolateRuns } from '../core/bidi.js';
 
 if (!window.__writeRightLoaded) {
   window.__writeRightLoaded = true;
@@ -51,6 +52,21 @@ function start() {
   };
 
   const readText = node => (node.matches('input, textarea') ? node.value : node.innerText || '');
+
+  /**
+   * Mirror the whole widget when the user is writing right-to-left, and isolate
+   * Latin runs so URLs and code identifiers are not reordered by the bidi
+   * algorithm. Presentation only: the value written back to the page is never
+   * changed by this.
+   */
+  function applyDirection(text) {
+    const { direction } = resolveDirection(text);
+    root.setAttribute('dir', direction);
+    el.panel.setAttribute('dir', direction);
+    return direction;
+  }
+
+  const bidi = value => escapeHtml(isolateRuns(String(value ?? '')));
 
   function writeText(node, value) {
     node.focus();
@@ -122,6 +138,7 @@ function start() {
   }
 
   function render(error) {
+    applyDirection(state.checkedText);
     const quality = error ? 0 : Math.max(42, 100 - state.issues.length * 9);
     el.count.textContent = String(state.issues.length);
     el.count.hidden = state.issues.length === 0;
@@ -159,8 +176,8 @@ function start() {
   function card(issue, index) {
     return `<article><small>${escapeHtml(issue.category)}</small>` +
       `<p>${escapeHtml(issue.message)}</p>` +
-      `<div class="wr-replacement"><del>${escapeHtml(issue.original)}</del><span>→</span>` +
-      `<ins>${escapeHtml(issue.replacement)}</ins></div>` +
+      `<div class="wr-replacement"><del class="wr-bidi">${bidi(issue.original)}</del><span>→</span>` +
+      `<ins class="wr-bidi">${bidi(issue.replacement)}</ins></div>` +
       `<button class="wr-accept" data-apply="${index}">Accept</button></article>`;
   }
 
