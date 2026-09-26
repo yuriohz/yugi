@@ -16,6 +16,7 @@ import { resolveLocale } from '../core/locale.js';
 import { OPERATION, GUARDRAILS, LENGTH, lengthInstruction } from '../core/modes.js';
 import { enforceGuardrails } from '../core/guardrails.js';
 import { REVIEW_INSTRUCTION, calibrateReview } from '../core/review.js';
+import { RESEARCH_INSTRUCTION, webSearchTool, normaliseAnnotations, reconcileResearch } from '../core/research.js';
 import { ApiError } from './openrouter.js';
 
 const builders = Object.create(null);
@@ -299,5 +300,67 @@ registerTask(TASKS.REVIEW, ({ text, model, plan, profile, localeLayer, platform,
       ]
     }),
     postProcess: value => calibrateReview(value, { hasEvidence: false })
+  };
+});
+
+// ------------------------------------------------- research review (web)
+
+registerTask(TASKS.RESEARCH_REVIEW, ({ text, model, plan, settings, profile, localeLayer, platform, options = {} }) => {
+  if (!plan?.useTools) {
+    throw new ApiError(
+      'Researched review needs a model that supports tool calling. Choose one in settings.',
+      { code: 'model_incompatible' }
+    );
+  }
+  // Research is explicit, per request. It never runs because a setting is on.
+  if (options.research !== true) {
+    throw new ApiError(
+      'Researched review was not requested for this run. Switch research on for this review to use the web.',
+      { code: 'research_not_requested' }
+    );
+  }
+
+  const research = { ...(settings?.research || {}), ...(options.researchOptions || {}) };
+
+  const system = composeSystemPrompt({
+    mode: RESEARCH_INSTRUCTION,
+    profile,
+    locale: localeLayer,
+    platform,
+    hasUntrustedData: true,
+    output: {
+      schemaDescription: schemaDescriptionFor(TASKS.RESEARCH_REVIEW),
+      notes: [
+        'Only cite sources the search actually returned. Use their ids.',
+        'A claim without a citation is never supported.',
+        'Do not include a rewrite or a "proposal" field.'
+      ]
+    }
+  });
+
+  return {
+    timeoutMs: LIMITS.RESEARCH_TIMEOUT_MS,
+    context: { text },
+    body: baseBody({
+      model,
+      plan,
+      temperature: 0.1,
+      tools: [webSearchTool(research)],
+      messages: [
+        { role: 'system', content: system },
+        {
+          role: 'user',
+          content: composeUserMessage({
+            text,
+            instruction: options.question
+              ? `Review the text below and check its factual claims. It is a reply to: ${String(options.question).slice(0, 600)}`
+              : 'Review the text below and check its factual claims against the web.',
+            untrustedBlocks: options.untrustedBlocks || []
+          })
+        }
+      ]
+    }),
+    // Annotations are attached by the router, then reconciled here.
+    postProcess: (value, context, meta) => reconcileResearch(value, normaliseAnnotations(meta?.annotations || []))
   };
 });

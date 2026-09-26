@@ -159,13 +159,17 @@ function finalise({ task, response, request, caps, warnings }) {
   }
 
   // Task-specific post-processing (offset checks, citation gating, and so on).
-  const result = request.postProcess ? request.postProcess(validated.value, request.context) : validated.value;
+  const annotations = message?.annotations || [];
+  const result = request.postProcess
+    ? request.postProcess(validated.value, request.context, { annotations, response })
+    : validated.value;
 
   return {
     task,
     result,
     warnings: [...warnings, ...(request.warnings || [])],
-    annotations: message?.annotations || [],
+    annotations,
+    webSearchRequests: response?.usage?.server_tool_use?.web_search_requests ?? 0,
     usage: summariseUsage(response?.usage, caps?.pricing),
     model: response?.model || request.body?.model || null,
     finishReason: response?.choices?.[0]?.finish_reason || null

@@ -98,7 +98,12 @@ Status values: `complete`, `in progress`, `blocked`, `not started`.
 
 | Field | Value |
 |---|---|
-| **Status** | not started |
+| **Status** | complete |
+| **Commit** | `0272f0f` |
+| **Tests performed** | `npm run verify`; 300 unit assertions total. New: `research.test.js` (28), including six end-to-end runs through the router. |
+| **Acceptance criteria** | ✅ Uses the current `openrouter:web_search` **server tool** via the `tools` array, not the deprecated `plugins: [{id:"web"}]` surface. Verified against OpenRouter's server-tool documentation on 26 September 2026. ✅ Citations are parsed from `message.annotations[].url_citation`, tolerating both the nested and flat shapes, with `[...]` excerpt markers normalised; `usage.server_tool_use.web_search_requests` is surfaced. ✅ A claim can only be `supported` if a citation the search actually returned backs it — an invented URL is stripped and the claim downgraded, asserted end to end. ✅ Non-HTTP schemes (`javascript:`, `data:`) are rejected. ✅ Contradictions set `applyBlocked: true` until each is acknowledged. ✅ Research never runs implicitly: a run without `options.research === true` is refused with zero network calls. ✅ Source snippets are wrapped as untrusted data. |
+| **Remaining issues** | Some native-search providers return no annotations at all (Anthropic and Google native search). When that happens there are no usable sources, the verdict degrades to `unverifiable`, and the user is told — rather than the model's uncited claims being trusted. |
+| **Evidence** | Sources the model ignored are still displayed so the user can see what was searched, but are excluded from the evidence count. `supportedClaimsOnly` gates which claims may feed a later rewrite and returns a reason for every exclusion. |
 
 ### Run 8 — Profiles, voice samples, terminology, dictionary, import/export
 
