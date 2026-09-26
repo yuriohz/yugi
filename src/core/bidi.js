@@ -144,16 +144,32 @@ export function checkTerminalPunctuation(text) {
   return { ok: true };
 }
 
-/** Arabic comma and question mark inside the body, not only at the end. */
+/**
+ * Latin punctuation inside Arabic text.
+ *
+ * The decision is made on the two adjacent tokens rather than a fixed window:
+ * a comma between two Latin words belongs to an embedded English clause and is
+ * correct, while a comma between a Latin run and an Arabic word belongs to the
+ * Arabic sentence and should be the Arabic form.
+ */
 export function detectLatinPunctuationInArabic(text) {
   const source = String(text ?? '');
+  if (resolveDirection(source).direction !== 'rtl') return [];
+
   const issues = [];
-  const map = { ',': '،', ';': '؛', '?': '؟' };
+  const map = { ',': '\u060C', ';': '\u061B', '?': '\u061F' };
+
   for (const m of source.matchAll(/[,;?]/g)) {
-    const before = source.slice(Math.max(0, m.index - 12), m.index);
-    const after = source.slice(m.index + 1, m.index + 13);
-    // Only when Arabic surrounds it; a comma inside an English clause is fine.
-    if (!RTL_CHARS.test(before) || (after.trim() && !RTL_CHARS.test(after) && LTR_CHARS.test(after))) continue;
+    const prevToken = lastToken(source.slice(0, m.index));
+    const nextToken = firstToken(source.slice(m.index + 1));
+
+    const prevIsLatin = LTR_CHARS.test(prevToken) && !RTL_CHARS.test(prevToken);
+    const nextIsLatin = LTR_CHARS.test(nextToken) && !RTL_CHARS.test(nextToken);
+    // Both neighbours Latin: this punctuation belongs to an embedded clause.
+    if (prevIsLatin && nextIsLatin) continue;
+    // Neither neighbour has Arabic: nothing to correct.
+    if (!RTL_CHARS.test(prevToken) && !RTL_CHARS.test(nextToken) && !nextToken) continue;
+
     issues.push({
       start: m.index,
       end: m.index + 1,
@@ -165,4 +181,14 @@ export function detectLatinPunctuationInArabic(text) {
     });
   }
   return issues;
+}
+
+function lastToken(before) {
+  const match = before.match(/\S+\s*$/);
+  return match ? match[0].trim() : '';
+}
+
+function firstToken(after) {
+  const match = after.match(/^\s*\S+/);
+  return match ? match[0].trim() : '';
 }
