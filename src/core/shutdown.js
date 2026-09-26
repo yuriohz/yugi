@@ -23,6 +23,11 @@ export function normaliseOrigin(input) {
   if (!input) return null;
   try {
     const url = input.includes('://') ? new URL(input) : new URL(`https://${input}`);
+    // URL() is permissive about hostnames; require something that looks like a
+    // real host or an explicit localhost/IP, so rubbish cannot be stored.
+    if (!/^(?:\[[0-9a-f:]+\]|localhost|[a-z0-9-]+(?:\.[a-z0-9-]+)+|\d{1,3}(?:\.\d{1,3}){3})$/i.test(url.hostname)) {
+      return null;
+    }
     return url.origin;
   } catch {
     return null;

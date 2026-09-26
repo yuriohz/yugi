@@ -131,13 +131,23 @@ Status values: `complete`, `in progress`, `blocked`, `not started`.
 
 | Field | Value |
 |---|---|
-| **Status** | not started |
+| **Status** | complete |
+| **Commit** | `aef26cf` |
+| **Tests performed** | `npm run verify`; 395 unit assertions total. New: `favourites.test.js` (11). |
+| **Acceptance criteria** | ✅ Model ids are validated against the real OpenRouter `vendor/model[:variant]` shape, so `javascript:alert(1)` and bare names are refused with an explanation. ✅ Favourites can be added, removed, renamed, reordered and capped at 20, with duplicates refused. ✅ Use is recorded and drives the default in-widget order. ✅ Favourites are decorated with **real** capabilities from the catalogue: a model without `tools` is shown as unable to do researched review, and its context length is displayed. ✅ A favourite that has left the catalogue is kept and explained rather than silently dropped, and its capability is reported as unknown rather than false. ✅ Malformed stored entries are discarded on read. |
+| **Remaining issues** | Suggested starter models are a static list filtered against the live catalogue, so a withdrawn suggestion disappears rather than being offered and failing. |
+| **Evidence** | `decorateFavourites` is the single source for the settings list and the in-widget selector, so the two cannot disagree. |
 
 ### Run 11 — Shutdown controls and the zero-call guarantee
 
 | Field | Value |
 |---|---|
-| **Status** | not started |
+| **Status** | complete |
+| **Commit** | `aef26cf` |
+| **Tests performed** | `npm run verify`; 395 unit assertions total. New: `shutdown.test.js` (15), including three exhaustive zero-call sweeps across **all seven tasks** using a `forbiddenFetch` spy that throws if any request is attempted. |
+| **Acceptance criteria** | ✅ Three independent scopes — global, website, tab-session — with precedence asserted in that order. ✅ **Zero extension API calls while disabled**: for every task, under each of the three scopes, the call count is asserted to be exactly 0. The gate runs before the model catalogue is consulted, so not even a capability lookup escapes. ✅ Switching off cancels work already in flight, not only future work. ✅ Tab-session shutdown is memory-only and is cleared on `tabs.onRemoved` and `tabs.onReplaced`. ✅ Website shutdown normalises and validates the origin; rubbish cannot be stored. ✅ Re-enabling restores normal operation, asserted end to end. |
+| **Remaining issues** | Two request types remain possible while globally off: testing a key and refreshing the model list, and only when explicitly triggered from the settings page with `userInitiated: true`. This is the user asking for a call, and it is documented in the service worker and in the privacy policy. |
+| **Evidence** | The gate is enforced in the service worker *and* re-checked inside `runTask`, so a compromised page that reached the router directly would still be refused. |
 
 ### Run 12 — Site adapters and nearby conversation context
 
