@@ -186,7 +186,12 @@ Status values: `complete`, `in progress`, `blocked`, `not started`.
 
 | Field | Value |
 |---|---|
-| **Status** | not started |
+| **Status** | complete — **awaiting your decision on the final name** |
+| **Commit** | `0850af2` |
+| **Deliverable** | [`NAMING_RESEARCH.md`](NAMING_RESEARCH.md) |
+| **Acceptance criteria** | ✅ 42 candidates generated across five naming strategies. ✅ Screened against nine criteria including English *and* Arabic pronounceability, phonemes Arabic lacks (/p/, /v/, hard /g/), and negative meanings or near-homophones in both languages — several candidates were eliminated on exactly those grounds (`Naqa` ≈ *nāqa*, she-camel; `Marginal`; `Tahrir`). ✅ Availability researched against the public web, Chrome Web Store, GitHub, Product Hunt, Google Play, the Apple App Store, and **live ICANN RDAP queries** for 14 domains. ✅ Evidence-backed shortlist of three — **Saqel**, **Tanqih**, **Sabk** — each with the evidence for and against stated separately. ✅ **No claim of legal clearance is made anywhere in the document.** |
+| **Honest gaps** | **No trademark register was actually searched.** USPTO, UK IPO, EUIPO and WIPO all require JavaScript or an authenticated session and could not be queried from this environment; WIPO's Global Brand Database returned "Page not found". This is recorded prominently in §4.1 of the deliverable rather than glossed over. `.app` and `.io` RDAP endpoints were also unreachable, so only `.com` registration status is evidenced. Social handles were not checked. |
+| **Blocked on you** | Choosing the name, commissioning a register search, buying a domain, and registering handles. Listed in §6 of the deliverable. |
 
 ### Run 16 — Release engineering, evidence, and store package
 
