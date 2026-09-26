@@ -120,7 +120,12 @@ Status values: `complete`, `in progress`, `blocked`, `not started`.
 
 | Field | Value |
 |---|---|
-| **Status** | not started |
+| **Status** | complete |
+| **Commit** | `83070b3` |
+| **Tests performed** | `npm run verify`; 369 unit assertions total. New: `custom-modes.test.js` (22), including four end-to-end runs. |
+| **Acceptance criteria** | ✅ Custom modes validate name, summary, description, colour, operation, Arabic register, research policy, guardrails, instruction, must-not list and test cases. ✅ **A custom mode cannot relax safety.** Six classes of escape attempt are refused with a specific reason: overriding prior instructions, asking for invented facts or sources, asking for undetectability, asking to reveal the system prompt or key, asking to impersonate, and asking to always agree with the writer. An ordinary instruction that merely mentions facts is not refused. ✅ `preserveFacts` and `neverAutoApply` are forced on and cannot be switched off. ✅ Built-ins cannot be overwritten or shadowed by name; duplicating one produces a valid custom mode. ✅ Saved prompts run through the same forbidden-instruction check, support `{{placeholder}}` substitution, and leave unknown placeholders visible rather than silently emptying them. ✅ Mode testing runs the mode and returns **WriteRight's own** guardrail and fidelity verdict alongside the model's self-assessment, with `passed` decided by the deterministic check — asserted by a case where the model claims success on an output that invented a date. |
+| **Remaining issues** | The forbidden-instruction check is pattern-based and cannot catch every paraphrase. It is a second line of defence; the primary protection is prompt layer ordering, asserted end to end in this run. |
+| **Evidence** | `custom-modes.test.js` asserts that in a real rewrite the safety contract still precedes the custom mode text in the composed prompt. |
 
 ### Run 10 — Favourite OpenRouter model management
 

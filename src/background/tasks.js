@@ -17,6 +17,7 @@ import { OPERATION, GUARDRAILS, LENGTH, lengthInstruction } from '../core/modes.
 import { enforceGuardrails } from '../core/guardrails.js';
 import { REVIEW_INSTRUCTION, calibrateReview } from '../core/review.js';
 import { RESEARCH_INSTRUCTION, webSearchTool, normaliseAnnotations, reconcileResearch } from '../core/research.js';
+import { renderModeInstruction } from '../core/custom-modes.js';
 import { ApiError } from './openrouter.js';
 
 const builders = Object.create(null);
@@ -171,7 +172,7 @@ registerTask(TASKS.REWRITE, ({ text, model, plan, profile, localeLayer, platform
   const findings = preflightFindings(text, { protectedTerms, script });
   const length = options.length || mode.controls?.defaultLength || LENGTH.SAME;
 
-  const modeLayer = [mode.instruction, '', lengthInstruction(length), '', guardrailLayer(mode.guardrails)]
+  const modeLayer = [renderModeInstruction(mode), '', lengthInstruction(length), '', guardrailLayer(mode.guardrails)]
     .filter(Boolean).join('\n');
 
   const system = composeSystemPrompt({
@@ -362,5 +363,73 @@ registerTask(TASKS.RESEARCH_REVIEW, ({ text, model, plan, settings, profile, loc
     }),
     // Annotations are attached by the router, then reconciled here.
     postProcess: (value, context, meta) => reconcileResearch(value, normaliseAnnotations(meta?.annotations || []))
+  };
+});
+
+// ---------------------------------------------------------- mode testing
+
+registerTask(TASKS.TEST_MODE, ({ model, plan, profile, localeLayer, mode, options = {} }) => {
+  if (!mode) throw new ApiError('Select a mode to test.', { code: 'no_mode' });
+  const testCase = options.testCase;
+  if (!testCase?.input) throw new ApiError('Add a test input first.', { code: 'no_test_input' });
+
+  const expectations = (testCase.expectations || []).slice(0, 6);
+
+  const system = composeSystemPrompt({
+    mode: renderModeInstruction(mode),
+    profile,
+    locale: localeLayer,
+    output: {
+      schemaDescription: schemaDescriptionFor(TASKS.TEST_MODE),
+      notes: [
+        'Run the mode on the test input, then judge your own output against each expectation.',
+        'Be honest. Marking an unmet expectation as met makes the test worthless.'
+      ]
+    }
+  });
+
+  const instruction = expectations.length
+    ? `Apply the ${mode.name} mode to the test input, then check your output against these expectations:\n${expectations.map((e, i) => `${i + 1}. ${e}`).join('\n')}`
+    : `Apply the ${mode.name} mode to the test input.`;
+
+  return {
+    timeoutMs: LIMITS.REQUEST_TIMEOUT_MS,
+    context: { text: testCase.input, mode, expectations, protectedTerms: profile?.protectedTerms || [] },
+    body: baseBody({
+      model,
+      plan,
+      temperature: 0.3,
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: composeUserMessage({ text: testCase.input, instruction }) }
+      ]
+    }),
+    postProcess: (value, context) => {
+      // The model's self-assessment is advisory. The deterministic guardrail
+      // check is what actually decides whether the mode behaved.
+      const guard = enforceGuardrails({
+        guardrails: context.mode.guardrails,
+        original: context.text,
+        proposal: value.output,
+        protectedTerms: context.protectedTerms
+      });
+      const declared = context.expectations.map((expectation, i) => ({
+        expectation,
+        modelSaysMet: Boolean(value.checks?.[i]?.met),
+        evidence: value.checks?.[i]?.evidence || ''
+      }));
+      return {
+        modeId: context.mode.id,
+        input: context.text,
+        output: value.output,
+        expectations: declared,
+        guardrails: { ok: guard.ok, blocked: guard.blocked, violations: guard.violations },
+        fidelity: { ok: guard.fidelity.ok, warnings: guard.fidelity.warnings },
+        checks: guard.evaluation.checks,
+        // Stated plainly so the UI cannot present a self-assessment as a result.
+        note: 'Expectation results are the model judging its own output. The guardrail and fidelity results are checked by WriteRight.',
+        passed: guard.ok && !guard.blocked
+      };
+    }
   };
 });
