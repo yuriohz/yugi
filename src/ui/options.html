@@ -21,6 +21,7 @@
       <a href="#writing">Writing</a>
       <a href="#profiles">Profiles</a>
       <a href="#modes">Modes</a>
+      <a href="#prompts">Prompts</a>
       <a href="#dictionary">Dictionary</a>
       <a href="#privacy">Privacy</a>
       <a href="#data">Export</a>
@@ -77,6 +78,13 @@
         <label>Name <input id="profileName"></label>
         <label>Audience <input id="profileAudience" placeholder="Colleagues and clients"></label>
       </div>
+      <label>Arabic dialect for this profile
+        <select id="profileLocale">
+          <option value="en-GB">Follow the mode (MSA, Egyptian for Casual)</option>
+          <option value="ar">Modern Standard Arabic everywhere</option>
+          <option value="ar-EG">Egyptian Arabic everywhere</option>
+        </select>
+      </label>
       <label>Voice <textarea id="profileVoice" rows="3" placeholder="Short sentences, no slang, British spelling."></textarea></label>
       <label>Voice samples (one per paragraph) <textarea id="profileSamples" rows="4" placeholder="Paste a few messages you actually sent."></textarea></label>
       <label>Protected terms (comma separated) <input id="profileProtected" placeholder="WriteRight, OpenRouter, Abu Dhabi"></label>
@@ -105,6 +113,21 @@
         <button type="button" id="saveMode">Save custom mode</button>
       </div>
       <pre id="modeTestOut" class="out" hidden></pre>
+    </section>
+
+    <section id="prompts">
+      <h2>Saved prompts</h2>
+      <p class="hint">Reusable instructions with <code>{{placeholders}}</code>, kept here until the in-page runner ships. Like custom modes, a prompt cannot relax safety or ask for invented facts.</p>
+      <ul id="promptList" class="list"></ul>
+      <div class="row">
+        <label>Name <input id="promptName" placeholder="Chase politely"></label>
+        <label>Mode (optional id) <input id="promptMode" placeholder="professional-firm"></label>
+      </div>
+      <label>Prompt <textarea id="promptBody" rows="3" placeholder="Remind them about {{invoice}} without threatening."></textarea></label>
+      <div class="actions">
+        <span id="promptStatus"></span>
+        <button type="button" id="savePrompt">Save prompt</button>
+      </div>
     </section>
 
     <section id="dictionary">

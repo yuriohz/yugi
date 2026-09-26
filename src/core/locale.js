@@ -47,21 +47,31 @@ export function looksEgyptian(text) {
  *
  * Precedence: the script of the text the user is editing wins over the stored
  * preference, because a user writing Arabic in an English-configured browser
- * expects Arabic back.
+ * expects Arabic back. Within Arabic, an explicit per-profile dialect choice
+ * wins over the mode default (review decision Q5), so a Gulf or Maghreb user
+ * is not forced into Egyptian Casual, and an Egyptian user can hold Egyptian
+ * across every mode.
  */
 export function resolveLocale({ text = '', settings = {}, profile = null, mode = null } = {}) {
   const configured = profile?.locale || settings.locale || DEFAULT_LOCALE;
   const { script, dominant } = detectScript(text);
 
   if (dominant === 'arabic' || (script === 'unknown' && String(configured).startsWith('ar'))) {
-    // Mode decides the Arabic register; Casual is Egyptian, everything else MSA.
-    const register = mode?.arabicRegister
+    const profileArabic = normaliseArabicLocale(profile?.locale);
+    // Explicit profile dialect first, then the mode default (Casual is
+    // Egyptian, everything else MSA), then the writer's own markers.
+    const register = profileArabic || mode?.arabicRegister
       || (looksEgyptian(text) ? LOCALES.AR_EG : LOCALES.AR);
     return { locale: register, script: script === 'unknown' ? 'arabic' : script, direction: 'rtl', mixed: script === 'mixed' };
   }
 
   const english = String(configured).startsWith('en') ? configured : DEFAULT_LOCALE;
   return { locale: english, script: script === 'unknown' ? 'latin' : script, direction: 'ltr', mixed: script === 'mixed' };
+}
+
+/** Accept only the Arabic locales WriteRight can actually write. */
+export function normaliseArabicLocale(locale) {
+  return locale === LOCALES.AR_EG || locale === LOCALES.AR ? locale : null;
 }
 
 const LOCALE_NAMES = {

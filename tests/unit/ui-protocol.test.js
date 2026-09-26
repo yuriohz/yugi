@@ -57,3 +57,40 @@ test('the content script can launch rewrite and review, not only proofread', asy
   assert.match(src, /TASKS\.PROOFREAD/);
   assert.match(src, /renderModeLauncher/);
 });
+
+test('the content script reaches tone, reader reactions and grounded drafts', async () => {
+  const src = await readFile(path.join(ROOT, 'src/content/content.js'), 'utf8');
+  assert.match(src, /TASKS\.TONE/);
+  assert.match(src, /TASKS\.READER_REACTION/);
+  assert.match(src, /renderToneBody/);
+  assert.match(src, /renderReaderBody/);
+  assert.match(src, /supportedClaimsOnly/);
+  assert.match(src, /grounding/);
+  assert.match(src, /renderContextControls/);
+  assert.match(src, /researchAvailability/);
+});
+
+test('settings manage saved prompts through the service worker', async () => {
+  const options = await readFile(path.join(ROOT, 'src/ui/options.js'), 'utf8');
+  assert.match(options, /MESSAGES\.SAVE_PROMPT/);
+  assert.match(options, /MESSAGES\.DELETE_PROMPT/);
+  const worker = await readFile(path.join(ROOT, 'src/background/service-worker.js'), 'utf8');
+  assert.match(worker, /MESSAGES\.SAVE_PROMPT/);
+  assert.match(worker, /MESSAGES\.DELETE_PROMPT/);
+  assert.match(worker, /validatePrompt/);
+});
+
+test('the snapshot decorates favourites from the cache, never the network', async () => {
+  const worker = await readFile(path.join(ROOT, 'src/background/service-worker.js'), 'utf8');
+  assert.match(worker, /getCachedCatalogue/);
+  assert.match(worker, /decorateFavourites/);
+  const snapshot = worker.slice(worker.indexOf('async function loadSnapshot'), worker.indexOf('const handlers'));
+  assert.doesNotMatch(snapshot, /getCatalogue\(/);
+});
+
+test('the popup has one settings action and honest toggle copy', async () => {
+  const html = await readFile(path.join(ROOT, 'src/ui/popup.html'), 'utf8');
+  assert.ok(!html.includes('id="options"'), 'the duplicate options button is gone');
+  assert.match(html, /id="settings"/);
+  assert.ok(!html.includes('Allow WriteRight on'), 'the consent-sounding toggle label is gone');
+});

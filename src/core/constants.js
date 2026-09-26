@@ -53,6 +53,8 @@ export const MESSAGES = Object.freeze({
   DELETE_PROFILE: 'WR_DELETE_PROFILE',
   SAVE_MODE: 'WR_SAVE_MODE',
   DELETE_MODE: 'WR_DELETE_MODE',
+  SAVE_PROMPT: 'WR_SAVE_PROMPT',
+  DELETE_PROMPT: 'WR_DELETE_PROMPT',
   SET_FAVOURITES: 'WR_SET_FAVOURITES',
   ADD_DICTIONARY: 'WR_ADD_DICTIONARY',
   REMOVE_DICTIONARY: 'WR_REMOVE_DICTIONARY',
@@ -116,6 +118,19 @@ export const VERDICT_LABELS = Object.freeze({
   [VERDICTS.UNVERIFIABLE]: 'Cannot be verified from available evidence',
   [VERDICTS.NEEDS_VERIFICATION]: 'Needs verification',
   [VERDICTS.CONFLICTS]: 'Conflicts with the source'
+});
+
+/**
+ * One plain-language line per verdict, shown under the verdict in the review
+ * panel. Review decision Q7: the calibrated labels stay exact, and the
+ * explainer makes them legible to a non-technical reader.
+ */
+export const VERDICT_EXPLAINERS = Object.freeze({
+  [VERDICTS.SUPPORTED]: 'Follows from evidence given in this review.',
+  [VERDICTS.PARTIALLY_SUPPORTED]: 'Partly follows; part of it still needs checking.',
+  [VERDICTS.UNVERIFIABLE]: 'Could not be checked even with sources — for example a prediction or an opinion.',
+  [VERDICTS.NEEDS_VERIFICATION]: 'A factual claim about the outside world that has not been checked against a source.',
+  [VERDICTS.CONFLICTS]: 'Contradicts another claim in the text, or a source returned for this review.'
 });
 
 /** Phrasing the product must never emit. Enforced by validation and lint. */

@@ -29,7 +29,7 @@
 >
 > | | |
 > |---|---|
-> | Automated tests | ✅ 472 unit + 15 integration assertions, green |
+> | Automated tests | ✅ 492 unit + 16 integration assertions, green |
 > | Build and package | ✅ `npm run package` produces a validated runtime-only ZIP with a SHA-256 |
 > | Real Chrome acceptance testing | ❌ **Not performed.** No browser was available in the build environment. See [`docs/MANUAL_TEST_PLAN.md`](docs/MANUAL_TEST_PLAN.md) |
 > | Runtime screenshots | ❌ **None exist.** Everything in `store-assets/` and `design-v2/` is a mockup and is labelled as such |
@@ -135,7 +135,7 @@ There is no Chrome Web Store listing yet. Install from source:
 ```bash
 git clone https://github.com/yuriohz/yugi.git
 cd yugi
-git checkout arena/01a0dcc7-yugi
+git checkout master
 npm install
 npm run build
 ```
@@ -196,8 +196,8 @@ Design rules that are enforced, not merely intended:
 
 ```bash
 npm run build          # bundle src/ into a loadable dist/
-npm test               # 461 unit assertions
-npm run test:browser   # 15 integration journeys
+npm test               # 492 unit assertions
+npm run test:browser   # 16 integration journeys
 npm run lint           # project rules, syntax, manifest, prohibited claims
 npm run scan:secrets   # credential scan over the whole tree
 npm run verify         # all of the above
@@ -243,6 +243,7 @@ rationale in [`docs/PERMISSIONS.md`](docs/PERMISSIONS.md).
 | [`docs/MANUAL_TEST_PLAN.md`](docs/MANUAL_TEST_PLAN.md) | The Chrome acceptance script that still has to be run |
 | [`docs/RELEASE_NOTES.md`](docs/RELEASE_NOTES.md) | v2.0.0 release notes |
 | [`docs/SUBMISSION_CHECKLIST.md`](docs/SUBMISSION_CHECKLIST.md) | What is done and what is blocked before submission |
+| [`docs/REVIEW_DECISIONS.md`](docs/REVIEW_DECISIONS.md) | Answers to the eight Opus reviewer prompts, with code pointers |
 | [`store-assets/README.md`](store-assets/README.md) | Provenance of every image. Nothing is passed off as a screenshot |
 
 ---

@@ -137,6 +137,31 @@ test('British English is the default instruction for English text', async () => 
   assert.match(system, /-ise and -isation rather than -ize/);
 });
 
+test('a grounded rewrite carries supported claims and forbids the rest', async () => {
+  const fetchImpl = reply({ proposal: 'The deadline is 14 March.', meaningChanged: false });
+  const out = await runTask(
+    {
+      task: TASKS.REWRITE,
+      text: 'The deadline is soon.',
+      modeId: 'polish',
+      options: {
+        grounding: {
+          supported: [{ text: 'The deadline is 14 March.' }],
+          excluded: [{ text: 'Everyone agreed.' }]
+        }
+      }
+    },
+    { ...base, fetchImpl, mode: getBuiltInMode('polish') }
+  );
+  const system = fetchImpl.calls[0].body.messages[0].content;
+  assert.match(system, /Grounded claims for this draft/);
+  assert.match(system, /The deadline is 14 March/);
+  assert.match(system, /Do NOT assert/);
+  assert.match(system, /Everyone agreed/);
+  assert.equal(out.result.grounded, true);
+  assert.deepEqual(out.result.groundingCounts, { supported: 1, excluded: 1 });
+});
+
 test('platform constraints reach the prompt', async () => {
   const fetchImpl = reply({ proposal: 'Ship it.', meaningChanged: false });
   await runTask(

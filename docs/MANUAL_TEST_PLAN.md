@@ -125,7 +125,28 @@ them, and record the result and the build SHA-256 before submitting to the store
 | J4 | Cancel mid-request | Stops; no result appears afterwards | ☐ |
 | J5 | Cost display | Shows a real cost, an explicit estimate, or "not reported" — never a silent zero | ☐ |
 
-## K. Screenshots for the store
+## K. Opus-gap surfaces
+
+Added with the reviewer-prompt answers. All automated assertions for these are
+in `npm run verify`; this section is the visual and interaction pass.
+
+| # | Step | Expected | Pass |
+|---|---|---|---|
+| K1 | Open the widget on any text, click the Insights tab | Two read-only actions: Check tone, Preview reader reactions, plus an optional audience field | ☐ |
+| K2 | Check tone | Named dimensions with strength and verbatim quoted evidence; no edits offered | ☐ |
+| K3 | Preview reader reactions with an audience filled in | Hedged readings tied to quoted wording ("could be read as"), plus the caveat; never a prediction | ☐ |
+| K4 | Fresh profile, Technical Review selected | Research toggle is disabled with an explanation until the catalogue is refreshed in settings | ☐ |
+| K5 | Refresh the catalogue, pick a favourite labelled "web research" | Toggle enables; checking it shows the cost disclosure before anything runs | ☐ |
+| K6 | Pick a favourite labelled "no web research" | Toggle disables again with a model-specific reason | ☐ |
+| K7 | Run a researched review that returns a contradiction | Per-source reading checklist with an outstanding count; ticking all clears the banner | ☐ |
+| K8 | Review with at least one supported claim | "Draft response from N supported claims" appears and produces a rewrite labelled with its claim counts | ☐ |
+| K9 | Trigger a fidelity block (e.g. Professional & Firm inventing a date) | The banner lists the exact violations; Replace enables only after the acknowledgement box is ticked | ☐ |
+| K10 | Context controls in the composer | Global and site states shown together; enabling the missing one updates the disclosure line | ☐ |
+| K11 | Settings → profiles → Arabic dialect | "Egyptian Arabic everywhere" makes Polish return Egyptian for Arabic text; "MSA everywhere" makes Casual return MSA | ☐ |
+| K12 | Settings → saved prompts | Add, edit, delete, export, and re-import a prompt; a prompt asking for invented facts is refused at save | ☐ |
+| K13 | Popup | A single "Open settings" button; the site toggle reads "Off for {host} only" | ☐ |
+
+## L. Screenshots for the store
 
 Only after everything above passes:
 

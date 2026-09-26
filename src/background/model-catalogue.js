@@ -47,6 +47,22 @@ function trimEntry(model) {
   };
 }
 
+/**
+ * Read the catalogue cache without touching the network.
+ *
+ * Used when building UI state: the snapshot must never issue a request on its
+ * own, or opening the panel while WriteRight is switched off would break the
+ * zero-call guarantee. An empty cache means capabilities are unknown, which
+ * the UI states honestly instead of guessing.
+ *
+ * @returns {Promise<{models: object[], fetchedAt: number}>}
+ */
+export async function getCachedCatalogue({ area } = {}) {
+  const cached = await getCollection(STORAGE_KEYS.MODEL_CACHE, null, area).catch(() => null);
+  if (cached?.models?.length) return { models: cached.models, fetchedAt: cached.fetchedAt || 0 };
+  return { models: [], fetchedAt: 0 };
+}
+
 /** @returns {Promise<object|null>} the raw catalogue entry, or null when unknown. */
 export async function getModelCapabilities(modelId, options = {}) {
   if (!modelId) return null;

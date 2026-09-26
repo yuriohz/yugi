@@ -10,6 +10,7 @@
  */
 import { SCHEMA_VERSION, STORAGE_KEYS, LIMITS } from './constants.js';
 import { validateProfile } from './profiles.js';
+import { validateCustomMode, validatePrompt } from './custom-modes.js';
 import { redactSecrets } from './untrusted.js';
 import { stripDangerousKeys } from './json.js';
 
@@ -159,16 +160,24 @@ export function planImport(text, current = {}) {
   }
   if (profiles.length) { plan[STORAGE_KEYS.PROFILES] = profiles; summary.profiles = profiles.length; }
 
-  const modes = arrayOf(parsed.customModes)
-    .filter(m => m && typeof m.id === 'string' && typeof m.instruction === 'string')
-    .map(m => ({ ...m, builtIn: false, instruction: String(m.instruction).slice(0, 8000) }))
-    .slice(0, 50);
+  // Custom modes and saved prompts pass the same forbidden-instruction check
+  // as the settings form, so a hostile file cannot smuggle in an instruction
+  // the UI would refuse. Offenders are skipped with a warning, never imported.
+  const modes = [];
+  for (const raw of arrayOf(parsed.customModes).slice(0, 50)) {
+    const result = validateCustomMode({ ...(raw && typeof raw === 'object' ? raw : {}), builtIn: false }, { existing: modes });
+    if (!result.ok) { warnings.push(`A custom mode was skipped: ${result.errors[0]}`); continue; }
+    warnings.push(...result.warnings);
+    modes.push(result.mode);
+  }
   if (modes.length) { plan[STORAGE_KEYS.MODES] = modes; summary.customModes = modes.length; }
 
-  const prompts = arrayOf(parsed.promptTemplates)
-    .filter(p => p && typeof p.id === 'string' && typeof p.body === 'string')
-    .map(p => ({ ...p, body: String(p.body).slice(0, 4000) }))
-    .slice(0, 100);
+  const prompts = [];
+  for (const raw of arrayOf(parsed.promptTemplates).slice(0, 100)) {
+    const result = validatePrompt(raw && typeof raw === 'object' ? raw : {}, { existing: prompts });
+    if (!result.ok) { warnings.push(`A saved prompt was skipped: ${result.errors[0]}`); continue; }
+    prompts.push(result.prompt);
+  }
   if (prompts.length) { plan[STORAGE_KEYS.PROMPTS] = prompts; summary.promptTemplates = prompts.length; }
 
   const dictionary = arrayOf(parsed.dictionary)

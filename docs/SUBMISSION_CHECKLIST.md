@@ -17,10 +17,10 @@ These run in CI and in `npm run verify`. Re-run them on the exact commit you sub
 | 1.1 | Project lint, syntax, manifest validity | `npm run lint` | ✅ clean |
 | 1.2 | No prohibited assurance claims in any shipped file | included in lint | ✅ clean |
 | 1.3 | No credentials anywhere in the tree | `npm run scan:secrets` | ✅ clean |
-| 1.4 | Deterministic build; manifest references resolve | `npm run build` | ✅ 16 files |
-| 1.5 | Unit tests | `npm test` | ✅ 461 assertions |
-| 1.6 | Integration journeys | `npm run test:browser` | ✅ 15 journeys |
-| 1.7 | Package contains only allow-listed runtime files | `npm run package` | ✅ 17 entries |
+| 1.4 | Deterministic build; manifest references resolve | `npm run build` | ✅ 17 files |
+| 1.5 | Unit tests | `npm test` | ✅ 492 assertions |
+| 1.6 | Integration journeys | `npm run test:browser` | ✅ 16 journeys |
+| 1.7 | Package contains only allow-listed runtime files | `npm run package` | ✅ 18 entries |
 | 1.8 | No remote code: no remote `<script src>`, no URL `import()`, no `importScripts` from a URL, no `eval`, no `new Function` | enforced in `tools/package.js` | ✅ refused if found |
 | 1.9 | Every manifest permission has a written rationale | enforced in `tools/package.js` against `docs/PERMISSIONS.md` | ✅ |
 | 1.10 | SHA-256 and file manifest produced | `release/*.sha256`, `release/MANIFEST.txt` | ✅ |

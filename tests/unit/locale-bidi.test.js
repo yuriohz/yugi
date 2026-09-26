@@ -57,6 +57,15 @@ test('an empty field falls back to the configured locale', () => {
   assert.equal(resolveLocale({ text: '' }).locale, 'en-GB');
 });
 
+test('an explicit per-profile dialect wins over the mode default', () => {
+  const egyptian = { locale: LOCALES.AR_EG };
+  const msa = { locale: LOCALES.AR };
+  assert.equal(resolveLocale({ text: AR, profile: egyptian, mode: getBuiltInMode('polish') }).locale, LOCALES.AR_EG);
+  assert.equal(resolveLocale({ text: AR, profile: msa, mode: getBuiltInMode('casual') }).locale, LOCALES.AR);
+  assert.equal(resolveLocale({ text: AR, profile: { locale: 'en-GB' }, mode: getBuiltInMode('casual') }).locale, LOCALES.AR_EG);
+  assert.equal(resolveLocale({ text: AR, profile: { locale: 'xx' }, mode: getBuiltInMode('casual') }).locale, LOCALES.AR_EG);
+});
+
 test('locale names are human readable in both scripts', () => {
   assert.match(localeName(LOCALES.AR), /Modern Standard Arabic/);
   assert.match(localeName(LOCALES.AR_EG), /Egyptian Arabic/);

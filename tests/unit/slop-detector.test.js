@@ -57,8 +57,9 @@ test('user protected terms suppress matches inside them', () => {
   assert.deepEqual(detectSlop(text, { protectedTerms: ['Robust Ledger'] }), []);
 });
 
-test('em dash budget is zero for short copy and two for long drafts', () => {
-  assert.deepEqual(emDashBudget('a — b'), { count: 1, allowed: 0, words: 3, overBudget: true });
+test('em dash budget tolerates one dash and fails a crutch', () => {
+  assert.deepEqual(emDashBudget('a — b'), { count: 1, allowed: 1, words: 3, overBudget: false });
+  assert.equal(emDashBudget('a — b — c').overBudget, true);
   const long = `${'word '.repeat(150)}— one — two — three`;
   const budget = emDashBudget(long);
   assert.equal(budget.allowed, 2);

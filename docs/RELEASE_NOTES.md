@@ -134,7 +134,7 @@ unknown.
 ## Verification
 
 ```
-npm run verify     # lint, secret scan, build, 461 unit + 15 integration assertions
+npm run verify     # lint, secret scan, build, 492 unit + 16 integration assertions
 npm run package    # runtime-only ZIP plus SHA-256
 ```
 

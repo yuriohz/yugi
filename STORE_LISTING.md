@@ -156,7 +156,7 @@ submits) are transmitted. Nothing is *collected* — there is no backend to coll
 > `screenshot-2-setup.png` and `screenshot-3-privacy.png` are rendered from the
 > `design-v2/` mockups. Chrome Web Store policy requires screenshots to show the actual
 > product. Five real runtime captures must replace them — see
-> [`store-assets/README.md`](store-assets/README.md) and §K of
+> [`store-assets/README.md`](store-assets/README.md) and §L of
 > [`docs/MANUAL_TEST_PLAN.md`](docs/MANUAL_TEST_PLAN.md).
 
 | Asset | Size | Status |
@@ -174,7 +174,7 @@ submits) are transmitted. Nothing is *collected* — there is no backend to coll
 
 ## Publisher dashboard items
 
-- Privacy policy URL: `https://github.com/yuriohz/yugi/blob/arena/01a0dcc7-yugi/PRIVACY_POLICY.md`
+- Privacy policy URL: `https://github.com/yuriohz/yugi/blob/master/PRIVACY_POLICY.md`
   — must be a stable public URL at submission time
 - Support: `https://github.com/yuriohz/yugi/issues`
 - Complete the privacy-practices questionnaire using §6 of the submission checklist

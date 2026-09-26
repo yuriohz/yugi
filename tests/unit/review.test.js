@@ -99,6 +99,24 @@ test('stripCertainty removes only the offending sentence', () => {
   assert.deepEqual(stripped, ['this is correct']);
 });
 
+test('stripCertainty keeps the clean clauses around a banned phrase', () => {
+  const { text, stripped } = stripCertainty('The logic holds for the first case, and you are right about the budget.');
+  assert.equal(text, 'The logic holds for the first case.');
+  assert.deepEqual(stripped, ['you are right']);
+});
+
+test('stripCertainty drops every offending clause in a twice-offending sentence', () => {
+  const { text, stripped } = stripCertainty('You are right, the response is factually correct.');
+  assert.equal(text, '');
+  assert.ok(stripped.includes('you are right'));
+  assert.ok(stripped.includes('factually correct'));
+});
+
+test('stripCertainty drops the sentence when nothing substantial survives', () => {
+  const { text } = stripCertainty('Yes, you are right. The window is five minutes.');
+  assert.equal(text, 'The window is five minutes.');
+});
+
 test('the banned certainty list covers assurance and correctness claims', () => {
   for (const phrase of ['undetectable', 'you are right', 'proves that', 'factually correct']) {
     assert.ok(BANNED_CERTAINTY.includes(phrase), `missing: ${phrase}`);

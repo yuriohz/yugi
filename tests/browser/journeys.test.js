@@ -345,6 +345,66 @@ test('journey: history off stores nothing; history on stores and then expires', 
 });
 
 // -------------------------------------------------------------------------
+test('journey: draft a grounded response from a researched review', async () => {
+  const ctx = session();
+  const text = 'Latency fell 12% last quarter, so the retry loop is safe.';
+  const researchFetch = fakeFetch([completion({
+    verdict: VERDICTS.PARTIALLY_SUPPORTED,
+    claims: [
+      { id: 'c1', text: 'Latency fell 12% last quarter.', kind: 'factual', status: VERDICTS.SUPPORTED, citationIds: ['s1'] },
+      { id: 'c2', text: 'The retry loop is safe.', kind: 'logical', status: VERDICTS.CONFLICTS, citationIds: ['s2'] }
+    ],
+    citations: [
+      { id: 's1', title: 'Alpha report', url: 'https://example.test/a', relationship: 'supports' },
+      { id: 's2', title: 'Beta study', url: 'https://other.test/b', relationship: 'conflicts' }
+    ],
+    contradictions: [{ claimId: 'c2', citationId: 's2', explanation: 'The study found retries still fail under load.' }],
+    findings: []
+  }, {
+    annotations: [
+      { type: 'url_citation', url_citation: { url: 'https://example.test/a', title: 'Alpha report', content: 'Latency fell 12%.' } },
+      { type: 'url_citation', url_citation: { url: 'https://other.test/b', title: 'Beta study', content: 'Retries fail under load.' } }
+    ]
+  })]);
+
+  const reviewed = await runTask(
+    { task: TASKS.RESEARCH_REVIEW, text, options: { research: true } },
+    { ...ctx, fetchImpl: researchFetch, mode: null }
+  );
+  assert.equal(reviewed.result.claims[0].status, VERDICTS.SUPPORTED);
+
+  // What the widget's "Draft response" button sends.
+  const { supportedClaimsOnly } = await import('../../src/core/research.js');
+  const { supported, excluded } = supportedClaimsOnly(reviewed.result);
+  assert.equal(supported.length, 1);
+  assert.equal(excluded.length, 1);
+
+  const draftFetch = fakeFetch([completion({
+    proposal: 'Latency fell 12% last quarter. The retry loop still needs a load test.',
+    meaningChanged: false
+  })]);
+  const drafted = await runTask(
+    {
+      task: TASKS.REWRITE,
+      text,
+      modeId: 'polish',
+      options: {
+        grounding: {
+          supported: supported.map(c => ({ text: c.text })),
+          excluded: excluded.map(c => ({ text: c.text }))
+        }
+      }
+    },
+    { ...ctx, fetchImpl: draftFetch, mode: getBuiltInMode('polish') }
+  );
+  const system = draftFetch.calls[0].body.messages[0].content;
+  assert.match(system, /Latency fell 12% last quarter/);
+  assert.match(system, /Do NOT assert/);
+  assert.match(system, /The retry loop is safe/);
+  assert.equal(drafted.result.grounded, true);
+  assert.equal(drafted.result.guardrails.blocked, false);
+});
+
 test('journey: the gate answers consistently for the widget and for the request', async () => {
   const area = new MemoryStorageArea();
   const settings = { ...defaultSettings(), apiKey: KEY, enabled: false };
