@@ -1,3 +1,4 @@
+import { getProvider, isKnownProvider } from '../core/providers.js';
 /**
  * WriteRight Manifest V3 service worker.
  *
@@ -94,15 +95,17 @@ async function loadSnapshot(origin, tabId) {
   // Capabilities come from the cache only. Reading the network here would
   // issue a request every time the panel opens — including while the
   // extension is switched off, which the zero-call guarantee forbids.
-  const { models: cachedModels } = await getCachedCatalogue().catch(() => ({ models: [] }));
+  const { models: cachedModels } = await getCachedCatalogue({ provider: settings.provider }).catch(() => ({ models: [] }));
   const favourites = decorateFavourites(
     Array.isArray(favouriteModels) ? favouriteModels : [],
     cachedModels,
-    { currentModel: settings.model }
+    { currentModel: settings.model, provider: settings.provider }
   );
   const defaultEntry = cachedModels.find(m => m.id === settings.model);
   const defaultCaps = defaultEntry ? capabilitiesFor(defaultEntry) : null;
   return {
+    provider: getProvider(settings.provider).id,
+    providerResearch: getProvider(settings.provider).supportsResearch,
     settings: safe,
     hasKey: Boolean(apiKey),
     shutdown: {
@@ -156,22 +159,25 @@ const handlers = {
 
   [MESSAGES.TEST_CONNECTION]: async (msg, sender) => {
     await requireEnabled(msg, sender, { allowUserInitiated: true });
-    const result = await testConnection(msg.settings);
+    const candidate = { ...(await getSettings()), ...Object.fromEntries(Object.entries(msg.settings || {}).filter(([, value]) => value !== undefined)) };
+    const result = await testConnection(candidate);
     // A successful key test is an explicit user action, so warming the model
     // catalogue here is within the user's request — and it means capability
     // badges and researched review work immediately after onboarding.
-    try { await getCatalogue({ force: true }); } catch { /* advisory only */ }
+    try { await getCatalogue({ force: true, provider: candidate.provider, apiKey: candidate.apiKey }); } catch { /* advisory only */ }
     return result;
   },
   [MESSAGES.LIST_MODELS]: async (msg, sender) => {
     await requireEnabled(msg, sender, { allowUserInitiated: true });
-    return getCatalogue(msg.options || {});
+    const settings = await getSettings();
+    return getCatalogue({ force: msg.options?.force === true, provider: settings.provider, apiKey: settings.apiKey });
   },
 
   [MESSAGES.GET_STATE]: async (msg, sender) => loadSnapshot(msg.origin || originOf(sender), msg.tabId ?? sender?.tab?.id),
 
   [MESSAGES.SET_SETTINGS]: async msg => {
     const patch = msg.patch && typeof msg.patch === 'object' ? msg.patch : {};
+    if (patch.provider !== undefined && !isKnownProvider(patch.provider)) fail('Unknown provider.', 'invalid_provider');
     const next = await setSettings(patch);
     return withoutKey(next);
   },
@@ -242,15 +248,16 @@ const handlers = {
   },
 
   [MESSAGES.SET_FAVOURITES]: async msg => {
+    const { provider } = await getSettings();
     if (Array.isArray(msg.favourites)) {
-      const invalid = msg.favourites.find(f => !isValidModelId(typeof f === 'string' ? f : f?.id));
-      if (invalid) fail('A favourite was not a valid OpenRouter model id.', 'invalid_model');
+      const invalid = msg.favourites.some(f => !isValidModelId(typeof f === 'string' ? f : f?.id, provider));
+      if (invalid) fail(`A favourite was not a valid ${getProvider(provider).name} model id.`, 'invalid_model');
       await setCollection(STORAGE_KEYS.FAVOURITE_MODELS, msg.favourites);
       return { favourites: msg.favourites };
     }
     const current = await getCollection(STORAGE_KEYS.FAVOURITE_MODELS, []);
     if (msg.add) {
-      const result = addFavourite(current, msg.add);
+      const result = addFavourite(current, msg.add, provider);
       if (!result.ok) fail(result.error, 'invalid_favourite');
       await setCollection(STORAGE_KEYS.FAVOURITE_MODELS, result.favourites);
       return { favourites: result.favourites };

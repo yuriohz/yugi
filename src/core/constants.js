@@ -16,6 +16,9 @@ export const SCHEMA_VERSION = 2;
 
 export const DEFAULT_ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions';
 export const OPENROUTER_MODELS_URL = 'https://openrouter.ai/api/v1/models';
+export const GOOGLE_CHAT_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
+export const GOOGLE_MODELS_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
+export const GOOGLE_KEY_URL = 'https://aistudio.google.com/apikey';
 export const DEFAULT_MODEL = 'openai/gpt-4o-mini';
 
 /** Attribution headers OpenRouter asks integrators to send. */

@@ -41,19 +41,19 @@ export async function buildRequest(payload) {
  * is only sent when the model advertises support, because some providers reject
  * the field outright.
  */
-export function baseBody({ model, plan, messages, temperature = 0.2, maxTokens, tools }) {
+export function baseBody({ provider, model, plan, messages, temperature = 0.2, maxTokens, tools }) {
   const body = { model, temperature, messages };
   if (plan?.useResponseFormat !== false) body.response_format = { type: 'json_object' };
   if (maxTokens) body.max_tokens = maxTokens;
   if (tools?.length) body.tools = tools;
   // Ask OpenRouter to include accounting so cost can be reported rather than guessed.
-  body.usage = { include: true };
+  if (provider?.supportsUsage !== false) body.usage = { include: true };
   return body;
 }
 
 // ---------------------------------------------------------------- proofread
 
-registerTask(TASKS.PROOFREAD, ({ text, settings, model, plan, profile, localeLayer, platform, options = {} }) => {
+registerTask(TASKS.PROOFREAD, ({ provider, text, settings, model, plan, profile, localeLayer, platform, options = {} }) => {
   const protectedTerms = profile?.protectedTerms || [];
   const { locale } = resolveLocale({ text, settings, profile });
   const dictionary = options.dictionary || [];
@@ -72,6 +72,7 @@ registerTask(TASKS.PROOFREAD, ({ text, settings, model, plan, profile, localeLay
     timeoutMs: LIMITS.REQUEST_TIMEOUT_MS,
     context: { text, protectedTerms, locale, dictionary },
     body: baseBody({
+      provider,
       model,
       plan,
       temperature: 0,
@@ -161,7 +162,7 @@ export function preflightFindings(text, { protectedTerms = [], script = 'auto' }
 
 // ------------------------------------------------------------------ rewrite
 
-registerTask(TASKS.REWRITE, ({ text, model, plan, profile, localeLayer, platform, mode, options = {} }) => {
+registerTask(TASKS.REWRITE, ({ provider, text, model, plan, profile, localeLayer, platform, mode, options = {} }) => {
   if (!mode) throw new ApiError('No mode was selected for this rewrite.', { code: 'no_mode' });
   if (mode.operation && mode.operation !== OPERATION.REWRITE) {
     throw new ApiError(`“${mode.name}” is a ${mode.operation} mode and cannot be used for a rewrite.`, { code: 'wrong_operation' });
@@ -205,6 +206,7 @@ registerTask(TASKS.REWRITE, ({ text, model, plan, profile, localeLayer, platform
         : null
     },
     body: baseBody({
+      provider,
       model,
       plan,
       temperature: 0.3,
@@ -299,7 +301,7 @@ export function guardrailLayer(guardrails = []) {
 
 // ------------------------------------------------------- review (logic only)
 
-registerTask(TASKS.REVIEW, ({ text, model, plan, profile, localeLayer, platform, options = {} }) => {
+registerTask(TASKS.REVIEW, ({ provider, text, model, plan, profile, localeLayer, platform, options = {} }) => {
   const protectedTerms = profile?.protectedTerms || [];
 
   const system = composeSystemPrompt({
@@ -322,6 +324,7 @@ registerTask(TASKS.REVIEW, ({ text, model, plan, profile, localeLayer, platform,
     context: { text, protectedTerms },
     // A logic-only review must not be given tools, whatever the model supports.
     body: baseBody({
+      provider,
       model,
       plan: { ...plan, useTools: false },
       temperature: 0.1,
@@ -345,7 +348,7 @@ registerTask(TASKS.REVIEW, ({ text, model, plan, profile, localeLayer, platform,
 
 // ------------------------------------------------- research review (web)
 
-registerTask(TASKS.RESEARCH_REVIEW, ({ text, model, plan, settings, profile, localeLayer, platform, options = {} }) => {
+registerTask(TASKS.RESEARCH_REVIEW, ({ provider, text, model, plan, settings, profile, localeLayer, platform, options = {} }) => {
   if (!plan?.useTools) {
     throw new ApiError(
       'Researched review needs a model that supports tool calling. Choose one in settings.',
@@ -382,6 +385,7 @@ registerTask(TASKS.RESEARCH_REVIEW, ({ text, model, plan, settings, profile, loc
     timeoutMs: LIMITS.RESEARCH_TIMEOUT_MS,
     context: { text },
     body: baseBody({
+      provider,
       model,
       plan,
       temperature: 0.1,
@@ -407,7 +411,7 @@ registerTask(TASKS.RESEARCH_REVIEW, ({ text, model, plan, settings, profile, loc
 
 // ---------------------------------------------------------- mode testing
 
-registerTask(TASKS.TEST_MODE, ({ model, plan, profile, localeLayer, mode, options = {} }) => {
+registerTask(TASKS.TEST_MODE, ({ provider, model, plan, profile, localeLayer, mode, options = {} }) => {
   if (!mode) throw new ApiError('Select a mode to test.', { code: 'no_mode' });
   const testCase = options.testCase;
   if (!testCase?.input) throw new ApiError('Add a test input first.', { code: 'no_test_input' });
@@ -435,6 +439,7 @@ registerTask(TASKS.TEST_MODE, ({ model, plan, profile, localeLayer, mode, option
     timeoutMs: LIMITS.REQUEST_TIMEOUT_MS,
     context: { text: testCase.input, mode, expectations, protectedTerms: profile?.protectedTerms || [] },
     body: baseBody({
+      provider,
       model,
       plan,
       temperature: 0.3,
@@ -475,7 +480,7 @@ registerTask(TASKS.TEST_MODE, ({ model, plan, profile, localeLayer, mode, option
 
 // -------------------------------------------------------------------- tone
 
-registerTask(TASKS.TONE, ({ text, model, plan, profile, localeLayer }) => {
+registerTask(TASKS.TONE, ({ provider, text, model, plan, profile, localeLayer }) => {
   const system = composeSystemPrompt({
     mode: TONE_INSTRUCTION,
     profile,
@@ -489,6 +494,7 @@ registerTask(TASKS.TONE, ({ text, model, plan, profile, localeLayer }) => {
     timeoutMs: LIMITS.REQUEST_TIMEOUT_MS,
     context: { text },
     body: baseBody({
+      provider,
       model, plan, temperature: 0,
       messages: [
         { role: 'system', content: system },
@@ -517,7 +523,7 @@ const TONE_INSTRUCTION = [
 
 // --------------------------------------------------------- reader reaction
 
-registerTask(TASKS.READER_REACTION, ({ text, model, plan, profile, localeLayer, options = {} }) => {
+registerTask(TASKS.READER_REACTION, ({ provider, text, model, plan, profile, localeLayer, options = {} }) => {
   const audiences = (options.audiences || []).slice(0, 4);
   const system = composeSystemPrompt({
     mode: READER_INSTRUCTION,
@@ -539,6 +545,7 @@ registerTask(TASKS.READER_REACTION, ({ text, model, plan, profile, localeLayer, 
     timeoutMs: LIMITS.REQUEST_TIMEOUT_MS,
     context: { text },
     body: baseBody({
+      provider,
       model, plan, temperature: 0.2,
       messages: [
         { role: 'system', content: system },

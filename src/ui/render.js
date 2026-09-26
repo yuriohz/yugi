@@ -1,3 +1,4 @@
+import { getProvider } from '../core/providers.js';
 /**
  * Pure HTML for the in-page widget and popup copy. Kept free of the DOM so the
  * five modes, the compare view, and the blocked-apply state can be asserted
@@ -33,7 +34,7 @@ export function renderModeLauncher({ modes, selectedId }) {
   }).join('') + `</div>`;
 }
 
-export function renderComposer({ mode, length = LENGTH.SAME, research = false, contextNote = '', contextControls = '', researchNote = '', researchState = null, canRun = true }) {
+export function renderComposer({ provider = 'openrouter', mode, length = LENGTH.SAME, research = false, contextNote = '', contextControls = '', researchNote = '', researchState = null, canRun = true }) {
   if (!mode) return '';
   const isReview = mode.operation === OPERATION.REVIEW;
   const lengthControl = mode.controls?.length
@@ -54,7 +55,7 @@ export function renderComposer({ mode, length = LENGTH.SAME, research = false, c
     } else if (research && researchNote) {
       researchControl += `<p class="wr-research-note">${escapeHtml(researchNote)}</p>`;
     } else {
-      researchControl += `<p class="wr-research-note">Research may increase OpenRouter cost.</p>`;
+      researchControl += `<p class="wr-research-note">Research may increase ${escapeHtml(getProvider(provider).name)} cost.</p>`;
     }
   }
   const context = contextControls || (contextNote
@@ -121,7 +122,8 @@ function formatK(n) {
  * but the refusal happens here, in the widget, with instructions, instead of
  * after the user waits for a request that was never going to run.
  */
-export function researchAvailability({ favourites = [], modelId = '' } = {}) {
+export function researchAvailability({ favourites = [], modelId = '', provider = 'openrouter', providerResearch } = {}) {
+  if (providerResearch === false) return { allowed: false, known: true, reason: `Web research is not available on ${getProvider(provider).name}. Switch to OpenRouter for researched review.` };
   const match = favourites.find(f => f && typeof f === 'object' && f.id === modelId);
   if (!match) {
     return {
@@ -134,7 +136,7 @@ export function researchAvailability({ favourites = [], modelId = '' } = {}) {
     return {
       allowed: false,
       known: true,
-      reason: 'This model is not in the current OpenRouter catalogue. Pick a favourite that is still listed.'
+      reason: 'This model is not in the current provider catalogue. Pick a favourite that is still listed.'
     };
   }
   if (match.supportsResearch === true) return { allowed: true, known: true, reason: '' };
@@ -353,9 +355,9 @@ export function statusBlock(kind, title, message, actionLabel, action) {
     `<strong>${escapeHtml(title)}</strong><p>${escapeHtml(message)}</p>${extra}</div>`;
 }
 
-export function popupCopy({ hasKey, shutdown = {} }) {
+export function popupCopy({ provider = 'openrouter', hasKey, shutdown = {} }) {
   if (!hasKey) {
-    return { title: 'Finish your setup', detail: 'Add an OpenRouter key to get started.', icon: '!', paused: false };
+    return { title: 'Finish your setup', detail: `Add a ${getProvider(provider).name} key to get started.`, icon: '!', paused: false };
   }
   if (shutdown.global) {
     return { title: 'WriteRight is off', detail: 'Switched off everywhere. Nothing leaves this browser.', icon: 'Ⅱ', paused: true };

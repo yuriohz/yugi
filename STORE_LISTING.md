@@ -17,7 +17,7 @@ WriteRight — Rewrite, Review & Proofread
 ## Short description (max 132 characters)
 
 ```
-Rewrite, review and proofread anywhere you type, in English or Arabic, using your own OpenRouter key. No account, no tracking.
+Rewrite, review and proofread anywhere you type, in English or Arabic, using your own OpenRouter or Google AI Studio key. No account, no tracking.
 ```
 
 *(126 characters)*
@@ -82,7 +82,7 @@ network request at all.
 YOUR DATA
 
 • No account, no backend, no analytics, no tracking
-• Your OpenRouter key stays on your device and is never synced to Google
+• Your API key stays in local extension storage and is never synced through Chrome Sync
 • Nothing is read unless you are typing in a field
 • The conversation around you is never read unless you switch it on AND allow that
   specific site — and you see the exact messages before they are sent
@@ -96,7 +96,7 @@ correct, or accurate. AI output can be wrong — review it before you send it.
 
 REQUIREMENTS
 
-An OpenRouter account and API key. Usage is billed by OpenRouter at their rates. This
+An OpenRouter or Google AI Studio API key. Usage is billed by your selected provider at its rates. Researched review requires OpenRouter. This
 extension charges nothing and takes no commission.
 ```
 
@@ -108,7 +108,7 @@ Full reasoning, including alternatives that were considered and rejected, is in
 [`docs/PERMISSIONS.md`](docs/PERMISSIONS.md).
 
 **`storage`**
-> Stores the user's own OpenRouter API key, writing profiles, protected terms, custom
+> Stores the user's own provider API key, writing profiles, protected terms, custom
 > modes, dictionary and preferences on their device. `chrome.storage.local` only —
 > deliberately not `storage.sync`, so the key is never copied to Google's servers.
 
@@ -136,7 +136,7 @@ See §6 of [`docs/SUBMISSION_CHECKLIST.md`](docs/SUBMISSION_CHECKLIST.md) for th
 answer to every dashboard question, with the basis for each.
 
 Summary: **authentication information** (the user's own key, stored locally, sent only to
-OpenRouter), **personal communications** and **website content** (only the text the user
+the selected provider), **personal communications** and **website content** (only the text the user
 submits) are transmitted. Nothing is *collected* — there is no backend to collect it.
 
 ---
@@ -145,7 +145,7 @@ submits) are transmitted. Nothing is *collected* — there is no backend to coll
 
 > WriteRight helps you improve text you are writing in any web text field: it proofreads,
 > rewrites in a mode you choose, and reviews the reasoning in what you wrote. Every
-> capability serves that one purpose. It uses your own OpenRouter API key, has no backend,
+> capability serves that one purpose. It uses your own provider API key, has no backend,
 > and collects no analytics.
 
 ---

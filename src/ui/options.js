@@ -1,3 +1,4 @@
+import { getProvider, PROVIDERS } from '../core/providers.js';
 import { MESSAGES, TASKS } from '../core/constants.js';
 import { ask } from './messaging.js';
 import { capabilityBadges } from './render.js';
@@ -176,13 +177,39 @@ function renderDictionary() {
   }
 }
 
+function cleanEndpoint(value) {
+  const endpoint = String(value || '').trim();
+  return Object.values(PROVIDERS).some(p => p.defaultEndpoint === endpoint) ? '' : endpoint;
+}
+function paintProvider() {
+  const p = getProvider($('provider').value);
+  $('keyLabel').textContent = `${p.name} API key`;
+  $('apiKey').placeholder = p.keyPlaceholder;
+  $('keyLink').href = p.keyUrl;
+  $('keyLink').textContent = `Get a key from ${p.name} ↗`;
+  $('endpoint').placeholder = p.defaultEndpoint;
+  $('model').placeholder = p.defaultModel;
+  $('favId').placeholder = p.modelIdHint;
+  $('modelHint').textContent = `Ids look like ${p.modelIdHint}. Save your connection before adding favourites.`;
+  $('providerModels').replaceChildren(...p.models.map(m => new Option(m.label, m.id)));
+  $('researchNote').textContent = p.supportsResearch ? 'Researched review uses OpenRouter web search.' : 'Web research is not available on Google AI Studio. Switch to OpenRouter for researched review.';
+}
+$('provider').addEventListener('change', () => {
+  $('apiKey').value = '';
+  $('model').value = getProvider($('provider').value).defaultModel;
+  $('endpoint').value = cleanEndpoint($('endpoint').value);
+  paintProvider();
+});
+
 async function load() {
   snapshot = await ask(MESSAGES.GET_STATE);
   const s = snapshot.settings || {};
-  $('endpoint').value = s.endpoint || '';
+  $('provider').value = getProvider(s.provider).id;
+  paintProvider();
+  $('endpoint').value = cleanEndpoint(s.endpoint);
   $('model').value = s.model || '';
   $('locale').value = s.locale || 'en-GB';
-  $('apiKey').placeholder = snapshot.hasKey ? 'Key saved on this device' : 'sk-or-…';
+  $('apiKey').placeholder = snapshot.hasKey ? 'Key saved on this device' : getProvider(s.provider).keyPlaceholder;
   $('enabled').checked = s.enabled !== false;
   $('nearby').checked = Boolean(s.context?.nearbyEnabled);
   $('history').checked = Boolean(s.history?.enabled);
@@ -202,13 +229,14 @@ $('reveal').addEventListener('click', () => {
 
 $('saveConnection').addEventListener('click', async () => {
   const patch = {
-    endpoint: $('endpoint').value.trim(),
+    provider: $('provider').value,
+    endpoint: cleanEndpoint($('endpoint').value),
     model: $('model').value.trim(),
     locale: $('locale').value
   };
-  if ($('apiKey').value.trim()) patch.apiKey = $('apiKey').value.trim();
-  if (!patch.endpoint || !patch.model) {
-    setStatus('connectionStatus', 'Endpoint and model are required.', false);
+  if ($('apiKey').value.trim() || patch.provider !== snapshot.settings?.provider) patch.apiKey = $('apiKey').value.trim();
+  if (!patch.model) {
+    setStatus('connectionStatus', 'Model is required.', false);
     return;
   }
   const result = await ask(MESSAGES.SET_SETTINGS, { patch });
@@ -221,9 +249,10 @@ $('test').addEventListener('click', async () => {
   setStatus('connectionStatus', 'Testing…');
   try {
     const settings = {
-      endpoint: $('endpoint').value.trim(),
+      provider: $('provider').value,
+      endpoint: cleanEndpoint($('endpoint').value),
       model: $('model').value.trim(),
-      apiKey: $('apiKey').value.trim() || undefined
+      apiKey: $('apiKey').value.trim() || ($('provider').value === snapshot.settings?.provider ? undefined : '')
     };
     const result = await ask(MESSAGES.TEST_CONNECTION, { settings, userInitiated: true });
     setStatus('connectionStatus', `Connected · ${result.model || settings.model}`);

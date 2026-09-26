@@ -7,7 +7,7 @@
 <p align="center"><strong>Rewrite, review and proofread anywhere you type — in English or Arabic.</strong></p>
 
 <p align="center">
-  A Chrome Manifest V3 extension with no backend, powered by your own OpenRouter key.
+  A Chrome Manifest V3 extension with no backend, powered by your own OpenRouter or Google AI Studio key.
 </p>
 
 <p align="center">
@@ -29,7 +29,7 @@
 >
 > | | |
 > |---|---|
-> | Automated tests | ✅ 492 unit + 16 integration assertions, green |
+> | Automated tests | ✅ 515 unit + 16 integration assertions, green |
 > | Build and package | ✅ `npm run package` produces a validated runtime-only ZIP with a SHA-256 |
 > | Real Chrome acceptance testing | ❌ **Not performed.** No browser was available in the build environment. See [`docs/MANUAL_TEST_PLAN.md`](docs/MANUAL_TEST_PLAN.md) |
 > | Runtime screenshots | ❌ **None exist.** Everything in `store-assets/` and `design-v2/` is a mockup and is labelled as such |
@@ -85,7 +85,7 @@ turned into agreement blocks the result and tells you exactly what happened.
 **Logic only** makes one call, has no web access, and marks every factual claim about the
 outside world *Needs verification* — it has no sources, so it cannot support anything.
 
-**Researched** uses OpenRouter's current `openrouter:web_search` server tool. A claim can
+**Researched** is OpenRouter-only; Google AI Studio supports logic-only review and the other writing tools, not web research. It uses OpenRouter's current `openrouter:web_search` server tool. A claim can
 only be *Supported* if a source the search actually returned backs it; an invented URL is
 stripped and the claim downgraded. A contradiction blocks apply until you open the source.
 
@@ -101,7 +101,7 @@ single request is attempted.
 
 Writing profiles with voice samples, protected terms and per-site rules · personal
 dictionary scoped globally, per profile or per site · custom modes and saved prompts with
-mode testing · favourite OpenRouter models showing real capabilities · exact-range
+mode testing · favourite models from your selected provider showing real capabilities · exact-range
 underlines via the CSS Custom Highlight API · word-level comparison · exact undo · tone
 analysis · reader-reaction readings · disclosed, twice-opt-in conversation context on
 WhatsApp Web, Gmail, LinkedIn and Slack · local history that is off by default and expires
@@ -146,7 +146,8 @@ Then in Chrome:
 2. Enable **Developer mode**
 3. **Load unpacked** → select the **`dist/`** directory
 4. Complete onboarding: paste your key from
-   [openrouter.ai/settings/keys](https://openrouter.ai/settings/keys), pick a model, test
+   [OpenRouter](https://openrouter.ai/settings/keys) or
+   [Google AI Studio](https://aistudio.google.com/apikey), select that provider, pick a model, test
    the connection
 
 > Load `dist/`, not the repository root. `dist/` is the runtime; the repository contains
@@ -196,7 +197,7 @@ Design rules that are enforced, not merely intended:
 
 ```bash
 npm run build          # bundle src/ into a loadable dist/
-npm test               # 492 unit assertions
+npm test               # 515 unit assertions
 npm run test:browser   # 16 integration journeys
 npm run lint           # project rules, syntax, manifest, prohibited claims
 npm run scan:secrets   # credential scan over the whole tree

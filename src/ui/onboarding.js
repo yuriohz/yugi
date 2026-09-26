@@ -1,8 +1,27 @@
+import { getProvider } from '../core/providers.js';
 import { MESSAGES } from '../core/constants.js';
 import { ask } from './messaging.js';
 
 let current = 1;
 const $ = s => document.querySelector(s);
+
+function paintProvider() {
+  const p = getProvider($('#provider').value);
+  $('#keyLabel').textContent = `${p.name} API key`;
+  $('#apiKey').placeholder = p.keyPlaceholder;
+  $('#keyLink').href = p.keyUrl;
+  $('#keyLink').textContent = `Create one on ${p.name} ↗`;
+  $('#model').replaceChildren(...p.models.map(m => new Option(m.label, m.id)));
+  $('#researchNote').textContent = p.supportsResearch ? 'Researched review uses OpenRouter web search.' : 'Web research is not available on Google AI Studio. Other writing tools remain available.';
+}
+$('#provider').addEventListener('change', () => {
+  $('#apiKey').value = '';
+  $('#connectNext').disabled = true;
+  $('#testStatus').hidden = true;
+  paintProvider();
+});
+for (const id of ['apiKey', 'model']) $(`#${id}`).addEventListener('input', () => { $('#connectNext').disabled = true; });
+paintProvider();
 
 function show(n) {
   current = n;
@@ -47,8 +66,11 @@ $('#test').addEventListener('click', async () => {
   box.className = 'test-status';
   box.textContent = 'Testing your connection…';
   button.disabled = true;
+  $('#connectNext').disabled = true;
+  for (const id of ['provider', 'apiKey', 'model']) $(`#${id}`).disabled = true;
   const settings = {
-    endpoint: 'https://openrouter.ai/api/v1/chat/completions',
+    provider: $('#provider').value,
+    endpoint: '',
     apiKey: key,
     model: $('#model').value
   };
@@ -62,14 +84,16 @@ $('#test').addEventListener('click', async () => {
     box.textContent = error.message;
   } finally {
     button.disabled = false;
+    for (const id of ['provider', 'apiKey', 'model']) $(`#${id}`).disabled = false;
   }
 });
 
 $('#connectNext').addEventListener('click', async () => {
   await ask(MESSAGES.SET_SETTINGS, {
     patch: {
-      endpoint: 'https://openrouter.ai/api/v1/chat/completions',
-      apiKey: $('#apiKey').value.trim(),
+      provider: $('#provider').value,
+      endpoint: '',
+      ...($('#apiKey').value.trim() ? { apiKey: $('#apiKey').value.trim() } : {}),
       model: $('#model').value
     }
   });
@@ -86,7 +110,9 @@ $('#finish').addEventListener('click', () => {
   try {
     const state = await ask(MESSAGES.GET_STATE);
     const s = state.settings || {};
-    $('#model').value = [...$('#model').options].some(o => o.value === s.model) ? s.model : 'openai/gpt-4o-mini';
+    $('#provider').value = getProvider(s.provider).id;
+    paintProvider();
+    $('#model').value = [...$('#model').options].some(o => o.value === s.model) ? s.model : getProvider(s.provider).defaultModel;
     if (s.locale) $('#locale').value = s.locale.startsWith('ar') ? 'ar' : s.locale;
     $('#enabled').checked = s.enabled !== false;
     if (state.hasKey) $('#connectNext').disabled = false;

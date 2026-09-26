@@ -56,3 +56,11 @@ Chrome Web Store policy requires screenshots to depict the actual product experi
 mockup passed off as a screenshot is a policy violation and, more simply, a false
 statement about the product. The labelling in this file exists so that cannot happen by
 accident.
+
+### Provider refresh — 26 September 2026
+
+All SVG/PNG pairs remain **design mockups**, with an on-image disclaimer. Setup
+mentions OpenRouter and Google AI Studio and shows the provider selector. Promos
+use provider-neutral copy. Re-rendered every PNG using `@resvg/resvg-js` with
+`{ font: { loadSystemFonts: true } }`; renderer dependencies were kept outside the
+extension package. Runtime screenshots must still follow manual-test section M.

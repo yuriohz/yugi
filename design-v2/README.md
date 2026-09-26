@@ -41,3 +41,8 @@ Onboarding explains what voice samples influence and reminds the user to remove 
 ## Editable sources
 
 Each PNG has a matching SVG file in this directory. The PNG exports are 1440×900. Changes should be made in the SVG source and exported again so the review artifacts and approved specification stay aligned.
+
+Provider refresh (26 September 2026): sidebar copy now says “Connect your AI”.
+All PNGs were re-rendered with `@resvg/resvg-js`, `loadSystemFonts: true`.
+Unsupported foreignObject text in 02, 05 and 06 was replaced with SVG text/tspan
+so it remains visible. All images explicitly remain design mockups, not screenshots.

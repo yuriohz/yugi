@@ -5,6 +5,19 @@ Store. See `docs/SUBMISSION_CHECKLIST.md` for what remains.
 
 ---
 
+## Google AI Studio as a second provider
+
+Choose OpenRouter or Google AI Studio during onboarding or in settings. Google defaults
+to Gemini 2.5 Flash, with Gemini 2.5 Pro and Gemini 2.0 Flash also offered. Availability
+is ultimately controlled by the provider; the catalogue can be refreshed with your key.
+Keys stay in local extension storage and are sent to your selected provider or custom
+endpoint. A blank endpoint means the selected provider's default.
+
+Google supports the writing tools and logic-only review, but **not researched review**:
+that feature uses OpenRouter's server-side web search. Google requests omit OpenRouter
+usage extensions, and unknown costs are not invented. Model caches and ID validation
+are provider-aware. Settings exports include the provider, never credentials.
+
 ## What changed since v1
 
 v1 was a single-purpose proofreader: one prompt, whole-field underlines, English only.

@@ -1,3 +1,4 @@
+import { getProvider } from '../core/providers.js';
 /**
  * WriteRight content script entry point.
  *
@@ -268,7 +269,7 @@ function start() {
   function bodyHtml() {
     const snap = state.snapshot || {};
     if (snap.hasKey === false) {
-      return statusBlock('error', 'Finish your setup', 'Add an OpenRouter API key in settings. WriteRight has no account of its own.', 'Open settings', 'settings');
+      return statusBlock('error', 'Finish your setup', `Add a ${getProvider(snap.settings?.provider).name} API key in settings. WriteRight has no account of its own.`, 'Open settings', 'settings');
     }
     if (snap.shutdown && snap.shutdown.allowed === false) {
       return statusBlock('idle', 'WriteRight is paused', snap.shutdown.reason || 'Nothing leaves this browser while WriteRight is off.', 'Resume', 'resume');
@@ -302,17 +303,21 @@ function start() {
     const host = normaliseHost(location.host);
     const researchNote = state.research
       ? researchDisclosure({
+          provider: snap.settings?.provider,
           research: { maxResults: snap.settings?.research?.maxResults },
           inputChars: (state.checkedText || '').length
         }).message
       : '';
     return renderModeLauncher({ modes: snap.modes || [], selectedId: state.selectedModeId }) +
       renderComposer({
+        provider: snap.settings?.provider,
         mode,
         length: state.length,
         research: state.research,
         researchNote,
         researchState: researchAvailability({
+          provider: snap.provider || snap.settings?.provider,
+          providerResearch: snap.providerResearch,
           favourites: snap.favourites || [],
           modelId: el.model.value || snap.settings?.model || ''
         }),

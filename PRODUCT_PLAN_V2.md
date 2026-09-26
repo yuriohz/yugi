@@ -233,6 +233,14 @@ Built-in modes can be duplicated but not overwritten. Custom modes can be export
 
 ## 7. Data model
 
+`provider` selects `openrouter` (default) or `google` (Google AI Studio).
+The registry owns default endpoint, onboarding models, key links and capabilities.
+A blank endpoint uses the provider default; an explicit custom endpoint wins.
+Google uses its OpenAI-compatible chat API and header-authenticated model catalogue.
+Catalogue caches are isolated by provider. Google omits `usage.include` and does not
+support the OpenRouter server-side web search tool: researched review is refused
+before lookup/send, while logic-only review and all other writing tasks remain available.
+
 ```js
 settings = {
   provider, endpoint, apiKey, model,
