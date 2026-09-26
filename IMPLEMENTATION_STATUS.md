@@ -164,7 +164,12 @@ Status values: `complete`, `in progress`, `blocked`, `not started`.
 
 | Field | Value |
 |---|---|
-| **Status** | not started |
+| **Status** | complete |
+| **Commit** | `be39bdd` |
+| **Tests performed** | `npm run verify`; 442 unit assertions total. New: `ranges-diff.test.js` (26). |
+| **Acceptance criteria** | ✅ **Exact-range underlines, not field-wide decoration.** `src/content/highlight.js` uses the CSS Custom Highlight API so the page's own DOM is never modified, with three severity colours. Overlapping issues are flattened into shared segments so nothing is drawn twice. ✅ **Stale-range protection.** Every issue carries a fingerprint — the exact slice plus a window either side. `relocate` finds it again after unrelated edits, and returns `null` when the text is gone or the target is ambiguous. A null result discards the suggestion; it is never approximated. ✅ Word-level diff reconstructs both sides exactly, asserted for English and Arabic, and a changed number can never hide inside an "equal" run. ✅ Replacements apply from the end so offsets stay valid, and overlapping replacements are skipped rather than corrupting the text. ✅ **Exact undo**: the previous string and caret position are restored from WriteRight's own bounded stack, because many editors clear their native undo when a value is set programmatically. |
+| **Remaining issues** | Inputs and textareas contain no text nodes, so the Custom Highlight API cannot draw inside them; they keep a field-level marker and the panel lists every issue with its exact text. Contenteditable fields get true exact ranges. Where the Highlight API is unavailable, no underline is drawn at all — a wrong underline is worse than none. |
+| **Evidence** | The long-document path degrades to a coarse diff rather than hanging, asserted with a 20,000-word input. |
 
 ### Run 14 — Tone, reader reactions, dictionary surface, and local history
 

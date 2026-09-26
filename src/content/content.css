@@ -22,3 +22,20 @@
 /* Mixed-content isolation. Applied to every element that renders user text. */
 .wr-bidi,#wr-root del,#wr-root ins,#wr-root .wr-quote,#wr-root .wr-proposal,#wr-root .wr-original{unicode-bidi:isolate;overflow-wrap:anywhere}
 .wr-ltr-run{unicode-bidi:isolate;direction:ltr;display:inline-block}
+
+/* ---------------------------------------------------------------------------
+   Exact-range underlines.
+
+   Drawn with the CSS Custom Highlight API so the page's own DOM is never
+   modified. Severity is carried by colour, and the underline covers only the
+   offending characters rather than the whole field.
+--------------------------------------------------------------------------- */
+::highlight(wr-error){text-decoration:underline wavy #e64b52 1.4px;text-underline-offset:3px}
+::highlight(wr-risk){text-decoration:underline wavy #d98324 1.4px;text-underline-offset:3px}
+::highlight(wr-improvement){text-decoration:underline wavy #3d6fb4 1.4px;text-underline-offset:3px}
+
+/* Field-level marker, used only when exact ranges cannot be drawn (inputs and
+   textareas have no text nodes to highlight). */
+.wr-has-issues{text-decoration-line:underline!important;text-decoration-style:wavy!important;text-decoration-color:#e64b52!important;text-decoration-thickness:1.4px!important;text-underline-offset:3px!important}
+
+#wr-root .wr-summary button[data-undo]{margin-left:6px;color:#626b77}

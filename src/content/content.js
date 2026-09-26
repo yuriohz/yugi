@@ -7,6 +7,9 @@
 import { MESSAGES, TASKS } from '../core/constants.js';
 import { escapeHtml } from '../core/escape.js';
 import { resolveDirection, isolateRuns } from '../core/bidi.js';
+import { withFingerprints, revalidate, applyReplacements } from '../core/ranges.js';
+import { makeUndoEntry, UndoStack } from '../core/diff.js';
+import { drawHighlights, clearHighlights } from './highlight.js';
 
 if (!window.__writeRightLoaded) {
   window.__writeRightLoaded = true;
@@ -31,7 +34,8 @@ function start() {
     checkedText: '',
     requestSeq: 0,
     timer: null,
-    disabledReason: ''
+    disabledReason: '',
+    undo: new UndoStack(20)
   };
 
   const root = document.createElement('div');
@@ -91,6 +95,7 @@ function start() {
   function dismiss() {
     el.badge.hidden = true;
     el.panel.hidden = true;
+    clearHighlights();
     state.active = null;
   }
 
@@ -127,7 +132,8 @@ function start() {
       });
       if (seq !== state.requestSeq || !state.active || readText(state.active) !== text) return;
       if (!response?.ok) throw new Error(response?.error?.message || 'Request failed.');
-      state.issues = response.result?.result?.issues || [];
+      // Fingerprint every issue so it can be re-validated against later edits.
+      state.issues = withFingerprints(response.result?.result?.issues || [], text);
       render();
     } catch (error) {
       state.issues = [];
@@ -152,6 +158,9 @@ function start() {
         ? `${state.issues.length} suggestion${state.issues.length === 1 ? '' : 's'} before you send.`
         : 'Clear, correct, and ready to send.';
     state.active?.classList.toggle('wr-has-issues', state.issues.length > 0);
+    // Underline the exact characters, not the whole field.
+    if (state.active && !error) drawHighlights(state.active, state.issues, state.checkedText);
+    else clearHighlights();
 
     if (error) {
       el.body.innerHTML =
@@ -168,7 +177,8 @@ function start() {
     } else {
       el.body.innerHTML =
         `<div class="wr-summary"><strong>Review your suggestions</strong>` +
-        `<button data-apply-all>Accept all</button></div>` +
+        `<button data-apply-all>Accept all</button>` +
+        (state.undo.size ? '<button data-undo>Undo</button>' : '') + '</div>' +
         state.issues.map((issue, index) => card(issue, index)).join('');
     }
   }
@@ -181,31 +191,60 @@ function start() {
       `<button class="wr-accept" data-apply="${index}">Accept</button></article>`;
   }
 
-  /** Stale-range protection: the text at the offsets must still be what we analysed. */
-  function stillValid(text, issue) {
-    return text.slice(issue.start, issue.end) === issue.original;
+  /**
+   * Stale-range protection. The text may have moved since it was analysed, so
+   * every issue is re-located against the current value before it is applied.
+   * An issue that cannot be located exactly is discarded, never approximated.
+   */
+  function liveIssues(current) {
+    const { live, stale } = revalidate(state.issues, current);
+    if (stale.length) state.staleCount = stale.length;
+    return live;
+  }
+
+  function remember(node, label) {
+    state.undo.push(makeUndoEntry({
+      text: readText(node),
+      selectionStart: node.selectionStart ?? null,
+      selectionEnd: node.selectionEnd ?? null,
+      label
+    }));
   }
 
   function applyOne(index) {
     if (!state.active) return;
-    const issue = state.issues[index];
     const current = readText(state.active);
-    if (!issue || !stillValid(current, issue)) return schedule(state.active);
-    writeText(state.active, current.slice(0, issue.start) + issue.replacement + current.slice(issue.end));
+    const issue = state.issues[index];
+    if (!issue) return;
+    const [located] = revalidate([issue], current).live;
+    if (!located) return schedule(state.active);
+
+    remember(state.active, 'accept suggestion');
+    writeText(state.active, applyReplacements(current, [located]));
     el.panel.hidden = true;
     schedule(state.active);
   }
 
   function applyAll() {
     if (!state.active) return;
-    let text = readText(state.active);
-    const valid = [...state.issues].sort((a, b) => b.start - a.start).filter(i => stillValid(text, i));
-    if (!valid.length) return schedule(state.active);
-    for (const issue of valid) {
-      text = text.slice(0, issue.start) + issue.replacement + text.slice(issue.end);
-    }
-    writeText(state.active, text);
+    const current = readText(state.active);
+    const live = liveIssues(current);
+    if (!live.length) return schedule(state.active);
+
+    remember(state.active, `accept ${live.length} suggestions`);
+    writeText(state.active, applyReplacements(current, live));
     el.panel.hidden = true;
+    schedule(state.active);
+  }
+
+  /** Exact undo: restore the previous string and caret, not the page's own stack. */
+  function undo() {
+    const entry = state.undo.pop();
+    if (!entry || !state.active) return;
+    writeText(state.active, entry.text);
+    if (entry.selectionStart !== null && state.active.setSelectionRange) {
+      try { state.active.setSelectionRange(entry.selectionStart, entry.selectionEnd); } catch { /* not supported */ }
+    }
     schedule(state.active);
   }
 
@@ -228,6 +267,7 @@ function start() {
     const apply = event.target.closest('[data-apply]');
     if (apply) applyOne(Number(apply.dataset.apply));
     if (event.target.closest('[data-apply-all]')) applyAll();
+    if (event.target.closest('[data-undo]')) undo();
     if (event.target.closest('[data-settings]')) {
       chrome.runtime.sendMessage({ type: MESSAGES.OPEN_OPTIONS });
     }
