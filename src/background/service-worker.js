@@ -15,6 +15,7 @@ import { getSettings } from '../core/storage.js';
 import { isAllowed, setShutdown, clearTabShutdown, getSiteShutdowns, normaliseOrigin, isTabShutdown } from '../core/shutdown.js';
 import { runTask, cancelTask, cancelAll, testConnection } from './router.js';
 import { getCatalogue } from './model-catalogue.js';
+import { record as recordHistory, list as listHistory, clear as clearHistory } from '../core/history.js';
 
 chrome.runtime.onInstalled.addListener(details => {
   if (details.reason === 'install') {
@@ -101,6 +102,11 @@ const handlers = {
     if (msg.value) cancelAll();
     return result;
   },
+
+  // Local history. Off by default; the module itself refuses to store when off.
+  [MESSAGES.HISTORY_ADD]: async msg => recordHistory(msg.entry || {}),
+  [MESSAGES.HISTORY_LIST]: async () => listHistory(),
+  [MESSAGES.HISTORY_CLEAR]: async () => clearHistory(),
 
   [MESSAGES.OPEN_OPTIONS]: async () => { chrome.runtime.openOptionsPage(); return { ok: true }; }
 };

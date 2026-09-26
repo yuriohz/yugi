@@ -433,3 +433,128 @@ registerTask(TASKS.TEST_MODE, ({ model, plan, profile, localeLayer, mode, option
     }
   };
 });
+
+// -------------------------------------------------------------------- tone
+
+registerTask(TASKS.TONE, ({ text, model, plan, profile, localeLayer }) => {
+  const system = composeSystemPrompt({
+    mode: TONE_INSTRUCTION,
+    profile,
+    locale: localeLayer,
+    output: {
+      schemaDescription: schemaDescriptionFor(TASKS.TONE),
+      notes: ['Every dimension must quote a span copied verbatim from the text. A dimension with no quote is an opinion, not an observation.']
+    }
+  });
+  return {
+    timeoutMs: LIMITS.REQUEST_TIMEOUT_MS,
+    context: { text },
+    body: baseBody({
+      model, plan, temperature: 0,
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: composeUserMessage({ text, instruction: 'Describe the tone of the text below.' }) }
+      ]
+    }),
+    postProcess: (value, context) => groundEvidence(value, context.text)
+  };
+});
+
+const TONE_INSTRUCTION = [
+  '# Task: tone analysis',
+  'Describe how the text reads. Do not rewrite it and do not judge the writer.',
+  '',
+  'For each dimension you report, quote at least one span copied character for character from the text as evidence.',
+  'Use dimensions that fit the text, such as warmth, directness, formality, urgency, certainty, frustration, or deference.',
+  'Strength is a number from 0 to 1 describing how strongly the text reads that way.',
+  '',
+  'Must not:',
+  '- must not describe the writer’s character, mood, or intentions. Describe the text.',
+  '- must not report a dimension you cannot quote evidence for.',
+  '- must not suggest edits. Tone analysis is read-only.',
+  '',
+  'Fill "mismatch" only when the tone conflicts with the stated audience or intent. Otherwise leave it empty.'
+].join('\n');
+
+// --------------------------------------------------------- reader reaction
+
+registerTask(TASKS.READER_REACTION, ({ text, model, plan, profile, localeLayer, options = {} }) => {
+  const audiences = (options.audiences || []).slice(0, 4);
+  const system = composeSystemPrompt({
+    mode: READER_INSTRUCTION,
+    profile,
+    locale: localeLayer,
+    output: {
+      schemaDescription: schemaDescriptionFor(TASKS.READER_REACTION),
+      notes: [
+        'These are possible readings of the wording, not predictions about a real person.',
+        'Quote the exact wording that could produce each reading in "trigger".'
+      ]
+    }
+  });
+  const instruction = audiences.length
+    ? `How might this text be read by: ${audiences.join('; ')}?`
+    : 'How might this text be read?';
+
+  return {
+    timeoutMs: LIMITS.REQUEST_TIMEOUT_MS,
+    context: { text },
+    body: baseBody({
+      model, plan, temperature: 0.2,
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: composeUserMessage({ text, instruction }) }
+      ]
+    }),
+    postProcess: (value, context) => {
+      const grounded = {
+        ...value,
+        reactions: value.reactions.filter(r => !r.trigger || context.text.includes(r.trigger.trim()) || looselyPresent(context.text, r.trigger))
+      };
+      return {
+        ...grounded,
+        caveat: grounded.caveat
+          || 'These are possible readings of the wording. They are not predictions about how any particular person will react.',
+        // Stated in the payload so the UI cannot present this as a prediction.
+        isPrediction: false
+      };
+    }
+  };
+});
+
+const READER_INSTRUCTION = [
+  '# Task: reader reaction',
+  'Describe how the wording could be read. Do not rewrite the text.',
+  '',
+  'Must not:',
+  '- must not state what the reader will think, feel, or do. Say what the wording could be read as.',
+  '- must not invent facts about the reader, their history, or their situation.',
+  '- must not diagnose, psychoanalyse, or attribute motives to anyone.',
+  '- must not report a reading you cannot tie to specific wording in the text.',
+  '',
+  'Likelihood is one of: possible, plausible, likely. Nothing is certain, so "certain" is not available.'
+].join('\n');
+
+/** Drop any evidence quote that is not actually in the text. */
+export function groundEvidence(value, text) {
+  const dimensions = (value.dimensions || []).map(dimension => ({
+    ...dimension,
+    evidence: (dimension.evidence || []).filter(quote => quote && looselyPresent(text, quote))
+  }));
+  const grounded = dimensions.filter(d => d.evidence.length);
+  return {
+    ...value,
+    dimensions: grounded,
+    dropped: dimensions.length - grounded.length,
+    // Made explicit: a dimension with no quotable evidence was removed.
+    note: dimensions.length !== grounded.length
+      ? 'Some observations were removed because the quoted evidence was not found in your text.'
+      : ''
+  };
+}
+
+/** Whitespace-tolerant containment check for model-supplied quotes. */
+function looselyPresent(text, quote) {
+  const normalise = s => String(s ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
+  return normalise(text).includes(normalise(quote));
+}
