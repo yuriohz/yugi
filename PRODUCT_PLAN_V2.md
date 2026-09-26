@@ -61,7 +61,9 @@ The relevant feature families are:
 
 ## 3. Anti-slop foundation
 
-The starting reference is [`haidrrrry/humanize-ai-writing`](https://github.com/haidrrrry/humanize-ai-writing), an MIT-licensed prompt and skill based on documented signs of AI writing. Its rules target canned vocabulary, fake significance, trailing participle padding, negative parallelism, forced groups of three, em-dash overuse, promotional filler, weak copulas, vague sourcing, hollow conclusions, uniform rhythm, and copy/paste artifacts. The project explicitly warns against over-correction and preserves meaning when a banned-word rewrite would damage accuracy.
+**Superseded during implementation.** The anti-slop backbone is [`petergyang/no-ai-slop`](https://github.com/petergyang/no-ai-slop), MIT licensed, pinned at commit `000650b156983f5159695b441477f4e63b25dc85`. Attribution and the mapping from upstream artefacts to vendored files is in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md); the rules are encoded in `src/core/slop-rules.js`. Its rules target banned vocabulary, often-empty adverbs and phrases, binary contrasts, throat-clearing openers, faux-insight setups, colon reveals, superficial participle analysis, importance puffery, interpretive metadiscourse, weasel attribution, fake-strong verbs, synonym cycling, negative listing, dramatic fragmentation, rhetorical setups, fake-profound kickers, summary-recap endings, formatting slop and em-dash overuse. The project explicitly warns against over-correction and preserves meaning when a banned-word rewrite would damage accuracy.
+
+> The earlier draft of this plan named `haidrrrry/humanize-ai-writing` as the starting reference. That was > replaced before implementation began. It is recorded in `THIRD_PARTY_NOTICES.md` under > “referenced but not included”: no code or rule content from it was used.
 
 WriteRight should adapt and attribute the rules rather than copy them silently. The MIT notice must be preserved in `THIRD_PARTY_NOTICES.md`. We should also borrow the stronger safety idea from fidelity-first de-slop systems: if a passage is hollow because it lacks facts, flag it instead of inventing substance.
 

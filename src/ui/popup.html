@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>WriteRight</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="header">
+    <div class="brand">
+      <span class="logo">W</span>
+      <div>
+        <strong>WriteRight</strong>
+        <small>WRITING ASSISTANT</small>
+      </div>
+    </div>
+  </div>
+  <div class="main">
+    <div class="status" id="card">
+      <span class="status-icon" id="icon">✓</span>
+      <div>
+        <strong id="status">Checking…</strong>
+        <small id="detail">Reading your settings</small>
+      </div>
+    </div>
+    <div class="toggles">
+      <button type="button" class="toggle" id="global" aria-pressed="true">
+        <span>Everywhere<small>When this is off, nothing leaves the browser</small></span>
+        <i></i>
+      </button>
+      <button type="button" class="toggle" id="site" aria-pressed="true">
+        <span>This website<small id="siteLabel">Allow WriteRight on the current site</small></span>
+        <i></i>
+      </button>
+      <button type="button" class="toggle" id="tab" aria-pressed="true">
+        <span>This tab<small>Off lasts until the tab closes</small></span>
+        <i></i>
+      </button>
+    </div>
+    <div class="privacy"><span>◆</span><div>Your key stays on this device. Text is sent only to the OpenRouter model you choose, and only when WriteRight is on.</div></div>
+    <div class="actions">
+      <button type="button" class="secondary" id="settings">Settings</button>
+      <button type="button" class="primary" id="options">Open options</button>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

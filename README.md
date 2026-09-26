@@ -4,277 +4,250 @@
 
 <h1 align="center">WriteRight</h1>
 
-<p align="center"><strong>AI spelling and grammar help wherever you type.</strong></p>
+<p align="center"><strong>Rewrite, review and proofread anywhere you type — in English or Arabic.</strong></p>
 
 <p align="center">
-  A privacy-conscious Chrome Manifest V3 extension powered by your own OpenRouter account.<br>
-  Review clear, actionable suggestions in WhatsApp Web and editable fields across the web.
+  A Chrome Manifest V3 extension with no backend, powered by your own OpenRouter key.
 </p>
 
 <p align="center">
-  <a href="#install-in-chrome">Install</a> ·
-  <a href="#features">Features</a> ·
-  <a href="#how-it-works">How it works</a> ·
+  <a href="#install">Install</a> ·
+  <a href="#what-it-does">What it does</a> ·
+  <a href="#what-it-will-not-do">What it will not do</a> ·
+  <a href="#architecture">Architecture</a> ·
+  <a href="#development">Development</a> ·
   <a href="PRIVACY_POLICY.md">Privacy</a> ·
-  <a href="STORE_LISTING.md">Store listing</a> ·
-  <a href="DEBRIEF_FOR_OPUS.md">Technical debrief</a> ·
-  <a href="PRODUCT_PLAN_V2.md">V2 plan</a> ·
-  <a href="DESIGN_SYSTEM.md">Design system</a> ·
-  <a href="design-v2/README.md">V2 designs</a>
+  <a href="EXECUTION_PLAN.md">Plan</a> ·
+  <a href="IMPLEMENTATION_STATUS.md">Status</a>
 </p>
 
-![WriteRight — clear writing wherever you type](store-assets/promo-marquee.png)
+---
 
-> **Release status:** v1.0.0 release candidate. The source, Web Store artwork, listing copy, privacy policy, and ready-to-upload ZIP are included in this repository. The v2 screens below are approval-stage designs, not implemented runtime features yet.
+> ### Status
+>
+> **Version 2.0.0 — built, tested, and not yet released.**
+>
+> | | |
+> |---|---|
+> | Automated tests | ✅ 472 unit + 15 integration assertions, green |
+> | Build and package | ✅ `npm run package` produces a validated runtime-only ZIP with a SHA-256 |
+> | Real Chrome acceptance testing | ❌ **Not performed.** No browser was available in the build environment. See [`docs/MANUAL_TEST_PLAN.md`](docs/MANUAL_TEST_PLAN.md) |
+> | Runtime screenshots | ❌ **None exist.** Everything in `store-assets/` and `design-v2/` is a mockup and is labelled as such |
+> | Chrome Web Store submission | ❌ **Not submitted.** See [`docs/SUBMISSION_CHECKLIST.md`](docs/SUBMISSION_CHECKLIST.md) |
+> | Public name | ⏳ Unresolved. "WriteRight" has documented conflicts; see [`NAMING_RESEARCH.md`](NAMING_RESEARCH.md) |
 
-## WriteRight v2 full UI/UX review
+---
 
-The proposed v2 experience adds five rewrite modes, comparison before replacement, technical and researched review, reusable prompts, writing profiles, custom modes, and voice onboarding. Read the [complete product plan](PRODUCT_PLAN_V2.md), [design system](DESIGN_SYSTEM.md), or [focused design review](design-v2/README.md).
+## What it does
 
-### 1. Five-mode rewrite launcher
+### Five editing modes
 
-Select text and choose **Polish**, **Casual**, **Polite**, **Professional & Firm**, or **Technical Review** without leaving the page.
+| Mode | Promise |
+|---|---|
+| **Polish** | Same voice, cleaner writing |
+| **Casual** | Natural and easygoing |
+| **Polite** | Respectful without weakening the message |
+| **Professional & Firm** | Direct, confident, and business-ready |
+| **Technical Review** | Check the reasoning, then improve the response |
 
-![WriteRight v2 five-mode rewrite launcher](design-v2/01-rewrite-modes.png)
+Each mode declares what it must **not** do, and those prohibitions are enforced after the
+model answers — not merely asked for in the prompt.
 
-### 2. Before-and-after rewrite approval
+### It removes AI writing patterns without flattening yours
 
-The original remains unchanged while the user reviews the proposal, meaning-preservation status, and length or directness adjustments.
+Built on Peter Yang's MIT-licensed [No AI Slop](https://github.com/petergyang/no-ai-slop),
+pinned at a specific commit in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md). Twenty
+named patterns are detected **locally**, with no model call — binary contrasts,
+throat-clearing openers, colon reveals, weasel attribution, importance puffery,
+fake-profound kickers, em-dash overuse and the rest. They are given to the model as
+candidates, not orders. Afterwards the result is checked again, and slop the model
+*introduced* is treated as a failure.
 
-![WriteRight v2 rewrite comparison](design-v2/02-rewrite-compare.png)
+### It will not invent things
 
-### 3. Technical and factual review
+Before you can apply a rewrite, WriteRight extracts every number, amount, percentage,
+date, time, URL, email address, @handle, identifier, code span and proper noun from your
+original and checks they survived. A dropped fact, an invented deadline, or a refusal
+turned into agreement blocks the result and tells you exactly what happened.
 
-Logic review runs without browsing. Research is an explicit option that adds source cards, claim relationships, and calibrated verdicts.
+### British English and Arabic, properly
 
-![WriteRight v2 technical review with evidence](design-v2/03-technical-review.png)
+- **British English by default** — `-ise`, `-our`, `-re`, `-ogue`, doubled `l`,
+  day-month-year dates. Americanisms are found locally, instantly, with no model call.
+- **Modern Standard Arabic** for Polish, Polite, Professional & Firm and Technical Review.
+- **Natural Egyptian Arabic** for Casual, because MSA reads stiff in a chat.
+- Latin runs, URLs and code inside Arabic are bidi-isolated so they cannot be mangled.
+- Arabic-Indic digits are preserved: `٤٥٠` stays `٤٥٠`.
+- The panel mirrors under RTL.
 
-### 4. Saved prompts and writing profiles
+### Technical Review, in two forms
 
-Reusable prompts handle quick tasks. Rich profiles hold voice samples, terminology, audience, locale, and site assignments for Work and Personal contexts.
+**Logic only** makes one call, has no web access, and marks every factual claim about the
+outside world *Needs verification* — it has no sources, so it cannot support anything.
 
-![WriteRight v2 prompt library and writing profiles](design-v2/04-prompt-library.png)
+**Researched** uses OpenRouter's current `openrouter:web_search` server tool. A claim can
+only be *Supported* if a source the search actually returned backs it; an invented URL is
+stripped and the claim downgraded. A contradiction blocks apply until you open the source.
 
-### 5. Add a custom mode
+### Shutdown that actually stops
 
-Users can define a mode in plain language, choose its behavior, add guardrails, test it, and save it beside the built-in modes.
+Three switches — global, per-website, per-tab-session. While any of them applies,
+WriteRight makes **no network request of any kind**. The gate runs before a request is
+constructed and again inside the router, and switching off cancels work in flight. This is
+covered by automated tests that sweep all seven tasks under all three scopes and fail if a
+single request is attempted.
 
-![WriteRight v2 custom mode builder](design-v2/05-custom-mode.png)
+### Also
 
-### 6. Voice-profile onboarding
+Writing profiles with voice samples, protected terms and per-site rules · personal
+dictionary scoped globally, per profile or per site · custom modes and saved prompts with
+mode testing · favourite OpenRouter models showing real capabilities · exact-range
+underlines via the CSS Custom Highlight API · word-level comparison · exact undo · tone
+analysis · reader-reaction readings · disclosed, twice-opt-in conversation context on
+WhatsApp Web, Gmail, LinkedIn and Slack · local history that is off by default and expires
+· export that contains no API key.
 
-Setup explains what voice samples affect, where they are stored, and how Personal and Work profiles differ.
+---
 
-![WriteRight v2 voice onboarding](design-v2/06-onboarding.png)
+## What it will not do
 
-> Editable SVG sources for every screen are included in [`design-v2/`](design-v2/). Review comments should reference the screen number and the specific element to change.
+This list is enforced in code and covered by tests, not just stated here.
 
-## Current v1 product preview
+- It will **not** claim your writing is undetectable, guaranteed human, or guaranteed
+  correct. Those claims are false, and the linter fails the build if they appear in any
+  shipped file.
+- It will **not** tell you that you are right. It says what the text supports, what needs
+  verification, and what conflicts with a source.
+- It will **not** invent facts, sources, statistics, deadlines, consequences, or personal
+  experience — including when a custom mode asks it to. Such a mode is refused at save
+  time with a reason.
+- It will **not** apply anything without you.
+- It will **not** send anything while it is switched off.
+- It will **not** read the conversation around you unless you switch that on, allow the
+  specific site, and see the exact text first.
 
-### Catch mistakes before you send
+---
 
-WriteRight detects spelling, grammar, and punctuation issues without pulling you away from the page where you are writing.
+## Install
 
-![WriteRight proofreading inside a WhatsApp-style editor](store-assets/screenshot-1-whatsapp.png)
-
-### Guided OpenRouter setup
-
-A four-step onboarding flow helps users connect their key, choose a model, verify the connection, and set writing preferences.
-
-![WriteRight OpenRouter setup wizard](store-assets/screenshot-2-setup.png)
-
-### Designed for transparency
-
-There is no WriteRight account or developer-operated writing database. The user chooses the provider and approves every edit.
-
-![WriteRight privacy overview](store-assets/screenshot-3-privacy.png)
-
-## Features
-
-- **Works where you write:** supports text inputs, textareas, and `contenteditable` editors, including WhatsApp Web.
-- **AI proofreading:** checks spelling, grammar, punctuation, and clear writing errors.
-- **Review-first corrections:** accept one suggestion or all currently valid suggestions.
-- **Bring your own API key:** connects directly to OpenRouter from the extension service worker.
-- **Model choice:** select an OpenRouter model during setup or configure one in advanced settings.
-- **Live connection test:** validates the key and model before setup is completed.
-- **Writing status:** shows a suggestion count and a simple quality indicator.
-- **Stale-edit protection:** verifies the original range before applying an AI correction.
-- **Local preferences:** key, model, language, and enabled state are stored with `chrome.storage.local`.
-- **Accessible interface:** keyboard focus states, responsive layouts, semantic labels, and reduced-motion support.
-- **No password collection:** password fields are excluded from proofreading.
-
-## Install in Chrome
-
-### Option A — use the packaged release
-
-1. Download [`writeright-extension.zip`](writeright-extension.zip).
-2. Extract it to a permanent directory on your computer.
-3. Open `chrome://extensions` in Chrome.
-4. Enable **Developer mode** in the upper-right corner.
-5. Click **Load unpacked**.
-6. Select the extracted directory containing `manifest.json`.
-7. Complete the WriteRight setup wizard.
-8. Refresh any tabs that were already open.
-
-### Option B — install from source
+There is no Chrome Web Store listing yet. Install from source:
 
 ```bash
 git clone https://github.com/yuriohz/yugi.git
 cd yugi
-git checkout arena/01a0dbec-yugi
+git checkout arena/01a0dcc7-yugi
+npm install
+npm run build
 ```
 
-Then load the repository directory through `chrome://extensions` as described above.
+Then in Chrome:
 
-> The GitHub repository owner may rename the repository to `writeright-extension`. If renamed, use the updated clone URL shown by GitHub.
+1. Open `chrome://extensions`
+2. Enable **Developer mode**
+3. **Load unpacked** → select the **`dist/`** directory
+4. Complete onboarding: paste your key from
+   [openrouter.ai/settings/keys](https://openrouter.ai/settings/keys), pick a model, test
+   the connection
 
-## Configure OpenRouter
+> Load `dist/`, not the repository root. `dist/` is the runtime; the repository contains
+> sources, tests and tooling that must never ship.
 
-1. Create an API key at [openrouter.ai/settings/keys](https://openrouter.ai/settings/keys).
-2. Paste the key into the first-install wizard.
-3. Select a compatible model.
-4. Choose **Test connection**.
-5. Select your writing language and enable proofreading.
-
-The default API endpoint is:
-
-```text
-https://openrouter.ai/api/v1/chat/completions
-```
-
-OpenRouter or the selected model may charge for requests. WriteRight does not provide API credits.
-
-## How it works
-
-```text
-Editable field
-     │
-     │ typing pause (700 ms)
-     ▼
-Content script
-     │ chrome.runtime message
-     ▼
-Manifest V3 service worker
-     │ authenticated HTTPS request
-     ▼
-OpenRouter / selected model
-     │ structured issue list
-     ▼
-Suggestion panel → user reviews → accepted edits are applied
-```
-
-1. `content.js` observes supported editable fields through delegated browser events.
-2. After a short typing pause, the current field text is sent to `background.js`.
-3. The background service worker reads the locally stored API configuration.
-4. It requests structured proofreading results from OpenRouter.
-5. Returned offsets are validated before being shown.
-6. The user explicitly accepts individual corrections or all valid corrections.
-7. WriteRight dispatches an `InputEvent` so framework-controlled editors can detect the change.
+---
 
 ## Architecture
 
-| File or directory | Responsibility |
-|---|---|
-| `manifest.json` | Manifest V3 declaration, permissions, icons, popup, options, and content injection |
-| `background.js` | OpenRouter requests, response validation, connection testing, and first-install launch |
-| `content.js` / `content.css` | Editable-field detection, suggestion workflow, in-page badge, and review panel |
-| `onboarding.*` | Four-step first-install setup wizard |
-| `popup.*` | Toolbar status and settings launcher |
-| `options.*` | Endpoint, API key, model, language, and enable/disable settings |
-| `icons/` | Extension icons required by Chrome |
-| `store-assets/` | Web Store screenshots, promotional images, and editable SVG sources |
-| `package.sh` | Validation, secret scanning, and deterministic ZIP packaging |
-
-The extension has no runtime npm dependencies, build step, remotely hosted code, analytics service, or first-party backend.
-
-## Privacy and permissions
-
-WriteRight requests:
-
-- **`storage`** to keep settings and the API key in local extension storage.
-- **`<all_urls>` host access** to place the proofreading interface in editable fields across websites and contact the configured API endpoint.
-
-Text in an active supported field is sent to the configured provider after the user pauses typing. Password fields are excluded. WriteRight does not operate a server or database, but OpenRouter and the selected upstream provider have their own data-handling policies.
-
-Read the full [Privacy Policy](PRIVACY_POLICY.md) and the security discussion in the [Technical Debrief](DEBRIEF_FOR_OPUS.md#4-privacy-and-security-assessment).
-
-## Build and validate the Chrome package
-
-The repository includes a packaging script that:
-
-- validates `manifest.json`;
-- syntax-checks all extension JavaScript;
-- scans the project for likely embedded API keys;
-- packages only runtime files and icons.
-
-Run:
-
-```bash
-chmod +x package.sh
-./package.sh
-unzip -t writeright-extension.zip
+```
+src/
+  core/                 pure logic, no browser APIs, fully unit tested
+    constants.js        shared vocabulary, limits, prohibited phrases
+    storage.js          settings with v1 → v2 migration
+    slop-rules.js       No AI Slop rules, vendored and attributed
+    slop-detector.js    local pattern detection
+    slop-eval.js        post-rewrite evaluation
+    prompts.js          eight-layer prompt composer, safety first
+    untrusted.js        fencing and redaction for page and search content
+    fidelity.js         what must survive a rewrite
+    guardrails.js       enforcement after the model answers
+    modes.js            the five built-in modes
+    locale.js  british.js  bidi.js     language, spelling, direction
+    review.js  research.js             technical review, with and without the web
+    profiles.js  dictionary.js  transfer.js  custom-modes.js  favourites.js
+    ranges.js  diff.js  history.js  schema.js  task-schemas.js  cost.js
+    adapters/           per-site composer and context adapters
+  background/           service worker, router, transport, catalogue
+  content/              in-page widget and exact-range highlighting
+  ui/                   popup, options, onboarding
 ```
 
-The resulting `writeright-extension.zip` can be uploaded to the Chrome Web Store Developer Dashboard.
+Design rules that are enforced, not merely intended:
 
-## Chrome Web Store publication
+- **The service worker owns every network call.** The content script has no key and no
+  transport.
+- **The shutdown gate runs before anything else**, in two places.
+- **Prompt layers are ordered** so a later layer cannot relax an earlier one. Safety comes
+  first, always, and the ordering is asserted end to end.
+- **Model output is untrusted.** Tolerant JSON parsing, strict schema validation, then
+  guardrail enforcement.
+- **Zero runtime dependencies.** The only devDependency is esbuild.
 
-The repository already includes:
+---
 
-- [store title, descriptions, and permission justification](STORE_LISTING.md);
-- [privacy policy](PRIVACY_POLICY.md);
-- three 1280×800 screenshots;
-- a 440×280 promotional tile;
-- a 1400×560 marquee image;
-- editable SVG sources;
-- a validated upload ZIP.
+## Development
 
-The publisher still needs to perform these account-level steps:
+```bash
+npm run build          # bundle src/ into a loadable dist/
+npm test               # 461 unit assertions
+npm run test:browser   # 15 integration journeys
+npm run lint           # project rules, syntax, manifest, prohibited claims
+npm run scan:secrets   # credential scan over the whole tree
+npm run verify         # all of the above
+npm run package        # validated runtime ZIP + SHA-256 in release/
+```
 
-1. Test the extension manually in current Chrome and WhatsApp Web.
-2. Host the privacy policy at a stable public HTTPS URL.
-3. Upload `writeright-extension.zip` in the Chrome Web Store Developer Dashboard.
-4. Upload the included artwork from `store-assets/`.
-5. Complete Google's privacy-practices questionnaire accurately.
-6. Submit the extension for review.
+`npm run package` refuses to produce an archive that contains a source map, a test, a
+dotfile, a credential, a file not on the runtime allow-list, a manifest reference that
+does not resolve, remotely hosted executable code, or a permission with no written
+rationale in [`docs/PERMISSIONS.md`](docs/PERMISSIONS.md).
 
-See [STORE_LISTING.md](STORE_LISTING.md) for copy and dashboard details.
-
-## Documentation
-
-| Document | Description |
-|---|---|
-| [Privacy Policy](PRIVACY_POLICY.md) | Data processed, credential storage, retention, sharing, and permissions |
-| [Chrome Web Store Listing](STORE_LISTING.md) | Marketing copy, category, permission rationale, asset inventory, and submission details |
-| [Engineering & Product Debrief](DEBRIEF_FOR_OPUS.md) | Architecture, product decisions, security assessment, limitations, QA status, and reviewer prompts |
-| [V2 Product Plan](PRODUCT_PLAN_V2.md) | Grammarly gap analysis, anti-slop strategy, five modes, prompt profiles, architecture, delivery phases, and acceptance criteria |
-| [Design System](DESIGN_SYSTEM.md) | Visual principles, tokens, typography, components, motion, accessibility, content design, privacy UX, and responsive behavior |
-| [V2 Design Review](design-v2/README.md) | Six actual 1440×900 product design screenshots with editable SVG sources |
-| [MIT License](LICENSE) | Open-source license |
+---
 
 ## Known limitations
 
-- Chrome internal pages and the Chrome Web Store do not allow ordinary content scripts.
-- Sandboxed iframes, closed shadow roots, canvas editors, and highly customized editors may require site-specific adapters.
-- Plain input elements do not expose styleable text ranges; exact corrections are shown in the review panel while the field receives issue styling.
-- Model quality and structured-output support vary across OpenRouter models.
-- AI suggestions may be incorrect and should always be reviewed.
+1. Exact-range underlines need text nodes and the CSS Custom Highlight API. `<input>` and
+   `<textarea>` get a field-level marker; the panel still lists the exact text.
+2. Site adapters depend on selectors that sites change. A failed capture yields **no**
+   context and says so, rather than guessing.
+3. Proper-noun detection is approximate, so a dropped name warns rather than blocks.
+4. The position-flip detector catches explicit reversals, not subtle softening.
+5. Custom-mode validation is pattern-based; prompt layer ordering is the real protection.
+6. Some native-search providers return no citation annotations. The verdict then degrades
+   to *unverifiable* rather than trusting uncited claims.
+7. `<all_urls>` is requested. Optional per-site permissions are the better shape and are
+   **not** implemented in this version — see [`docs/PERMISSIONS.md`](docs/PERMISSIONS.md).
+8. No real-browser acceptance testing has been performed in this environment.
 
-## Release checklist
+---
 
-- [x] Manifest V3 runtime
-- [x] OpenRouter integration
-- [x] First-install wizard
-- [x] Popup and settings interfaces
-- [x] In-page suggestion workflow
-- [x] Privacy policy and listing copy
-- [x] Store screenshots and promotional artwork
-- [x] Secret-scanning package script
-- [x] Ready-to-upload ZIP
-- [ ] Manual acceptance test in the publisher's current Chrome installation
-- [ ] Chrome Web Store privacy questionnaire
-- [ ] Chrome Web Store review and publication
+## Documents
 
-## License
+| Document | What it is |
+|---|---|
+| [`EXECUTION_PLAN.md`](EXECUTION_PLAN.md) | The 16-run plan. The definition of scope and completion |
+| [`IMPLEMENTATION_STATUS.md`](IMPLEMENTATION_STATUS.md) | Run-by-run ledger with tests, evidence and remaining issues |
+| [`PRODUCT_PLAN_V2.md`](PRODUCT_PLAN_V2.md) | The product thinking behind v2 |
+| [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md) | Visual and interaction rules |
+| [`PRIVACY_POLICY.md`](PRIVACY_POLICY.md) | What is processed, and what never is |
+| [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) | Attribution, licences, pinned commits |
+| [`NAMING_RESEARCH.md`](NAMING_RESEARCH.md) | 42 candidates, evidence, a shortlist of three, and no claim of legal clearance |
+| [`docs/PERMISSIONS.md`](docs/PERMISSIONS.md) | Every permission, justified |
+| [`docs/MANUAL_TEST_PLAN.md`](docs/MANUAL_TEST_PLAN.md) | The Chrome acceptance script that still has to be run |
+| [`docs/RELEASE_NOTES.md`](docs/RELEASE_NOTES.md) | v2.0.0 release notes |
+| [`docs/SUBMISSION_CHECKLIST.md`](docs/SUBMISSION_CHECKLIST.md) | What is done and what is blocked before submission |
+| [`store-assets/README.md`](store-assets/README.md) | Provenance of every image. Nothing is passed off as a screenshot |
 
-WriteRight is available under the [MIT License](LICENSE).
+---
+
+## Licence
+
+MIT — see [`LICENSE`](LICENSE). Third-party attribution in
+[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).

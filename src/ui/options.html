@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>WriteRight settings</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <main>
+    <div class="brand">
+      <span>W</span>
+      <div>
+        <h1>WriteRight</h1>
+        <p>Rewrite, review and proofread — under your control.</p>
+      </div>
+    </div>
+
+    <nav class="toc">
+      <a href="#connection">Connection</a>
+      <a href="#writing">Writing</a>
+      <a href="#profiles">Profiles</a>
+      <a href="#modes">Modes</a>
+      <a href="#dictionary">Dictionary</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#data">Export</a>
+    </nav>
+
+    <section id="connection">
+      <h2>OpenRouter connection</h2>
+      <p class="hint">Your key stays in Chrome’s local extension storage and is sent only to the endpoint you configure. WriteRight has no server of its own.</p>
+      <label>Endpoint <input id="endpoint" type="url" placeholder="https://openrouter.ai/api/v1/chat/completions"></label>
+      <label>API key
+        <div class="secret">
+          <input id="apiKey" type="password" placeholder="sk-or-…" autocomplete="off">
+          <button id="reveal" type="button">Show</button>
+        </div>
+      </label>
+      <div class="row">
+        <label>Default model <input id="model" placeholder="openai/gpt-4o-mini"></label>
+        <label>Locale
+          <select id="locale">
+            <option value="en-GB">British English</option>
+            <option value="en-US">American English</option>
+            <option value="ar">Arabic (MSA default)</option>
+            <option value="ar-EG">Egyptian Arabic</option>
+          </select>
+        </label>
+      </div>
+      <div class="actions">
+        <span id="connectionStatus"></span>
+        <button type="button" class="ghost" id="test">Test connection</button>
+        <button type="button" id="saveConnection">Save connection</button>
+      </div>
+    </section>
+
+    <section id="writing">
+      <h2>Favourite models</h2>
+      <p class="hint">The in-page selector shows this list. Ids look like <code>vendor/model</code>.</p>
+      <div class="row">
+        <label>Add a model <input id="favId" placeholder="anthropic/claude-3.5-sonnet"></label>
+        <label>Label <input id="favLabel" placeholder="Careful editing"></label>
+      </div>
+      <div class="actions">
+        <span id="favStatus"></span>
+        <button type="button" class="ghost" id="refreshModels">Refresh catalogue</button>
+        <button type="button" id="addFav">Add favourite</button>
+      </div>
+      <ul id="favList" class="list"></ul>
+    </section>
+
+    <section id="profiles">
+      <h2>Writing profiles</h2>
+      <p class="hint">A profile is who you are writing as. Protected terms are never rewritten.</p>
+      <label>Profile <select id="profileSelect"></select></label>
+      <div class="row">
+        <label>Name <input id="profileName"></label>
+        <label>Audience <input id="profileAudience" placeholder="Colleagues and clients"></label>
+      </div>
+      <label>Voice <textarea id="profileVoice" rows="3" placeholder="Short sentences, no slang, British spelling."></textarea></label>
+      <label>Voice samples (one per paragraph) <textarea id="profileSamples" rows="4" placeholder="Paste a few messages you actually sent."></textarea></label>
+      <label>Protected terms (comma separated) <input id="profileProtected" placeholder="WriteRight, OpenRouter, Abu Dhabi"></label>
+      <div class="actions">
+        <span id="profileStatus"></span>
+        <button type="button" class="ghost" id="newProfile">New profile</button>
+        <button type="button" class="ghost" id="deleteProfile">Delete</button>
+        <button type="button" id="saveProfile">Save profile</button>
+      </div>
+    </section>
+
+    <section id="modes">
+      <h2>Custom modes</h2>
+      <p class="hint">A custom mode can shape style. It cannot relax safety, invent facts, or ask WriteRight to be undetectable.</p>
+      <ul id="modeList" class="list"></ul>
+      <div class="row">
+        <label>Name <input id="modeName" placeholder="Blunt Slack"></label>
+        <label>Summary <input id="modeSummary" placeholder="Short and direct"></label>
+      </div>
+      <label>Instruction <textarea id="modeInstruction" rows="5" placeholder="Keep my bluntness. Do not add greetings I did not write."></textarea></label>
+      <label>Must not (one per line) <textarea id="modeMustNot" rows="3" placeholder="add emoji&#10;soften a refusal"></textarea></label>
+      <label>Test input <textarea id="modeTest" rows="2" placeholder="Optional. Run the mode against this text."></textarea></label>
+      <div class="actions">
+        <span id="modeStatus"></span>
+        <button type="button" class="ghost" id="testMode">Test mode</button>
+        <button type="button" id="saveMode">Save custom mode</button>
+      </div>
+      <pre id="modeTestOut" class="out" hidden></pre>
+    </section>
+
+    <section id="dictionary">
+      <h2>Personal dictionary</h2>
+      <p class="hint">Words WriteRight should stop correcting. Scoped globally unless you say otherwise.</p>
+      <div class="row">
+        <label>Word <input id="dictWord" placeholder="WriteRight"></label>
+        <label>Note <input id="dictNote" placeholder="Product name"></label>
+      </div>
+      <div class="actions">
+        <span id="dictStatus"></span>
+        <button type="button" id="addDict">Add word</button>
+      </div>
+      <ul id="dictList" class="list"></ul>
+    </section>
+
+    <section id="privacy">
+      <h2>Privacy controls</h2>
+      <label class="toggle">
+        <div><strong>WriteRight is on</strong><small>When this is off, the extension makes no network requests</small></div>
+        <input id="enabled" type="checkbox"><i></i>
+      </label>
+      <label class="toggle">
+        <div><strong>Nearby conversation context</strong><small>Off by default. Still requires per-site permission in the widget</small></div>
+        <input id="nearby" type="checkbox"><i></i>
+      </label>
+      <label class="toggle">
+        <div><strong>Local history</strong><small>Off by default. Stored on this device only, never exported, expires in 7 days</small></div>
+        <input id="history" type="checkbox"><i></i>
+      </label>
+      <p class="hint" id="historySummary"></p>
+      <div class="actions">
+        <button type="button" class="ghost" id="clearHistory">Clear history</button>
+        <button type="button" id="savePrivacy">Save privacy</button>
+      </div>
+    </section>
+
+    <section id="data">
+      <h2>Export and import</h2>
+      <p class="hint">An export never contains your API key, your drafts, or history.</p>
+      <div class="actions">
+        <span id="dataStatus"></span>
+        <button type="button" class="ghost" id="exportBtn">Download settings</button>
+        <label class="file">Import settings<input id="importFile" type="file" accept="application/json,.json"></label>
+      </div>
+    </section>
+  </main>
+  <script src="options.js"></script>
+</body>
+</html>

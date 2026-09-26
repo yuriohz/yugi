@@ -2,3 +2,14 @@
 *.log
 .venv/
 node_modules/
+
+# Build output and release artefacts are reproducible from source.
+dist/
+release/
+coverage/
+
+# Never commit credentials or local scratch state.
+.env
+.env.*
+*.key
+scratch/

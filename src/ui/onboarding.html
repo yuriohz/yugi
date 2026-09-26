@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Set up WriteRight</title>
+  <link rel="stylesheet" href="onboarding.css">
+</head>
+<body>
+<main>
+  <aside>
+    <div class="brand"><span>W</span><strong>WriteRight</strong></div>
+    <div class="steps">
+      <div class="step active" data-dot="1"><b>1</b><span>Welcome</span></div>
+      <div class="step" data-dot="2"><b>2</b><span>Connect OpenRouter</span></div>
+      <div class="step" data-dot="3"><b>3</b><span>Preferences</span></div>
+      <div class="step" data-dot="4"><b>4</b><span>You're ready</span></div>
+    </div>
+    <div class="privacy">Your key stays in Chrome's local extension storage. WriteRight has no server.</div>
+  </aside>
+  <section class="card">
+    <div class="screen active" data-screen="1">
+      <div class="hero-icon">W</div>
+      <p class="eyebrow">WELCOME TO WRITERIGHT</p>
+      <h1>Rewrite, review and proofread,<br>wherever you type.</h1>
+      <p class="lede">Five modes, British English and Arabic, and a fidelity check that blocks invented facts. Powered by your own OpenRouter key.</p>
+      <div class="benefits">
+        <div><i>✓</i><span><b>Five modes</b><small>Polish, Casual, Polite, Professional &amp; Firm, Technical Review</small></span></div>
+        <div><i>✓</i><span><b>Nothing is applied for you</b><small>Compare the proposal, then replace or discard it</small></span></div>
+        <div><i>✓</i><span><b>You control the AI</b><small>Your key, your model, and a switch that stops every request</small></span></div>
+      </div>
+      <div class="actions"><span></span><button type="button" data-next>Get started <em>→</em></button></div>
+    </div>
+    <div class="screen" data-screen="2">
+      <p class="eyebrow">STEP 2 OF 4</p>
+      <h1>Connect OpenRouter</h1>
+      <p class="lede">One API key gives WriteRight access to supported models. Your key is sent only to OpenRouter, and only when WriteRight is on.</p>
+      <label>OpenRouter API key
+        <div class="input-wrap">
+          <input id="apiKey" type="password" placeholder="sk-or-v1-…" autocomplete="off">
+          <button id="showKey" class="show" type="button">Show</button>
+        </div>
+      </label>
+      <p class="help">Don't have a key? <a href="https://openrouter.ai/settings/keys" target="_blank" rel="noopener noreferrer">Create one on OpenRouter ↗</a></p>
+      <label>Model
+        <select id="model">
+          <option value="openai/gpt-4o-mini">GPT-4o mini — fast and affordable</option>
+          <option value="anthropic/claude-3.5-haiku">Claude 3.5 Haiku</option>
+          <option value="google/gemini-2.0-flash-001">Gemini 2.0 Flash</option>
+          <option value="meta-llama/llama-3.3-70b-instruct">Llama 3.3 70B Instruct</option>
+        </select>
+      </label>
+      <div id="testStatus" class="test-status" hidden></div>
+      <div class="actions">
+        <button type="button" class="back" data-back>Back</button>
+        <button type="button" id="test" class="secondary">Test connection</button>
+        <button type="button" data-next disabled id="connectNext">Continue <em>→</em></button>
+      </div>
+    </div>
+    <div class="screen" data-screen="3">
+      <p class="eyebrow">STEP 3 OF 4</p>
+      <h1>Make it yours</h1>
+      <p class="lede">British English is the default. Arabic uses MSA in professional modes and Egyptian Arabic in Casual.</p>
+      <label>Primary locale
+        <select id="locale">
+          <option value="en-GB">British English</option>
+          <option value="en-US">American English</option>
+          <option value="ar">Arabic</option>
+        </select>
+      </label>
+      <div class="choice">
+        <div><b>Keep WriteRight on</b><small>You can pause it globally, per site, or per tab later</small></div>
+        <label class="toggle"><input id="enabled" type="checkbox" checked><i></i></label>
+      </div>
+      <div class="notice"><span>◇</span><p><b>A note about privacy</b>Text is sent only after you trigger a check or a rewrite. Nearby conversation is off until you switch it on twice. Password fields are never read.</p></div>
+      <div class="actions">
+        <button type="button" class="back" data-back>Back</button>
+        <button type="button" data-next>Save preferences <em>→</em></button>
+      </div>
+    </div>
+    <div class="screen done" data-screen="4">
+      <div class="success">✓</div>
+      <p class="eyebrow">SETUP COMPLETE</p>
+      <h1>You're ready to write.</h1>
+      <p class="lede">Pin WriteRight to the toolbar, refresh open tabs, then click the green W and pick a mode.</p>
+      <div class="try"><span>1</span><div><b>Refresh your open tabs</b><small>Chrome needs to load WriteRight into pages already open.</small></div></div>
+      <div class="try"><span>2</span><div><b>Click the green W</b><small>Choose Polish, Casual, Polite, Professional &amp; Firm, or Technical Review. Nothing is replaced until you accept.</small></div></div>
+      <div class="actions">
+        <button type="button" id="settings" class="back">Advanced settings</button>
+        <button type="button" id="finish">Start writing <em>→</em></button>
+      </div>
+    </div>
+  </section>
+</main>
+<script src="onboarding.js"></script>
+</body>
+</html>

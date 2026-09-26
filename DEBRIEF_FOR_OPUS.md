@@ -1,130 +1,380 @@
-# WriteRight Extension — Engineering and Product Debrief
+# WriteRight — Engineering and Product Debrief
 
-**Prepared:** September 26, 2026  
-**Repository:** `yuriohz/yugi`  
-**Working branch:** `arena/01a0dbec-yugi`  
-**Release:** 1.0.0
+**Prepared:** 26 September 2026
+**Repository:** `yuriohz/yugi`
+**Working branch:** `arena/01a0dcc7-yugi`
+**Version:** 2.0.0
+**Supersedes:** the v1.0.0 debrief of the same date. §5 answers every question that version asked.
+
+---
 
 ## 1. Executive summary
 
-WriteRight is a Chrome Manifest V3 proofreading extension inspired by the interaction model of modern writing assistants, while retaining original branding and visual assets. It operates in text inputs, textareas, and contenteditable regions, including WhatsApp Web. Users connect their own OpenRouter API key and review AI-generated spelling, grammar, punctuation, and clarity suggestions before applying them.
+v1 was a proofreader: one prompt, whole-field underlines, English only, roughly 1,400
+lines. v2 is a different product built around a single constraint — **the extension must
+never put words in your mouth** — and the architecture exists to enforce that rather than
+to request it politely in a prompt.
 
-The repository includes the runtime extension, a four-step onboarding wizard, settings and popup interfaces, marketing artwork, Chrome Web Store copy, a privacy policy, packaging automation, and a validated upload ZIP.
+The change in kind, not degree:
 
-## 2. Product decisions
+| | v1 | v2 |
+|---|---|---|
+| Capabilities | proofread | proofread, rewrite in 5 modes, logic review, researched review, mode testing, tone, reader reaction |
+| Correctness of output | trusted the model | tolerant parse → strict schema → guardrail enforcement → fidelity check, and apply is blocked on failure |
+| Underlines | whole field | exact character ranges via the CSS Custom Highlight API |
+| Stale suggestions | compared `original` at fixed offsets | fingerprint + relocation; ambiguous targets are discarded, never approximated |
+| Languages | English | British English by default, Modern Standard Arabic, Egyptian Arabic, full bidi handling |
+| Off switch | one boolean | three independent scopes with a tested zero-call guarantee |
+| Context | none | per-site adapters, twice-opt-in, previewed before sending |
+| Tests | none | 461 unit + 15 integration assertions |
+| Build | copy files into a ZIP | esbuild bundle, allow-listed package, remote-code refusal, SHA-256 |
 
-- **Bring-your-own-key:** avoids operating a credential-bearing proxy or billing backend.
-- **OpenRouter default:** provides one endpoint and access to multiple compatible models.
-- **Review-first UX:** no correction is applied without the user's explicit action.
-- **Cross-site operation:** `<all_urls>` provides the requested “anywhere” experience.
-- **Original identity:** the visual hierarchy is familiar to writing-assistant users, but the name, logo, palette, copy, and implementation are WriteRight assets rather than copied Grammarly assets.
-- **No account system:** settings remain in `chrome.storage.local`; WriteRight has no first-party database.
+**Everything the product refuses to claim is enforced in code**: a lint rule fails the
+build if "undetectable", "guaranteed human", "guaranteed correct" or "you are right"
+appears in any shipped file, outside the modules whose job is to forbid them.
+
+---
+
+## 2. Recovery note
+
+Two commits from a previous session — `e6f74c3` and `9cbe8b3` — were unrecoverable.
+Checked before any work began: `git log --all`, `git reflog` (two entries, clone and
+checkout), `git stash list`, `gh api .../branches`, `gh pr list --state all`, and
+`git cat-file -e` on both hashes. All negative.
+
+`EXECUTION_PLAN.md` was therefore **recreated** from `PRODUCT_PLAN_V2.md`,
+`DEBRIEF_FOR_OPUS.md` (v1), `DESIGN_SYSTEM.md`, `README.md` and the retained `design-v2/`
+artefacts, and the implementation was rebuilt from it across 16 runs. Evidence table in
+`IMPLEMENTATION_STATUS.md`.
+
+---
 
 ## 3. Architecture
 
-### Manifest and service worker
+### 3.1 Layout
 
-`manifest.json` declares Manifest V3, a background service worker, a toolbar popup, an options page, local storage access, and content-script access across sites.
+```
+src/core/         pure logic, no browser API, 100% of the test surface
+src/background/   service worker, router, transport, model catalogue
+src/content/      in-page widget, exact-range highlighting
+src/ui/           popup, options, onboarding
+```
 
-`background.js`:
+`src/core` imports nothing from `chrome.*`. That is what makes 461 unit assertions
+possible without a browser, and it is the single most valuable structural decision in the
+rebuild.
 
-1. Opens onboarding after first install.
-2. Receives text from the isolated content script.
-3. Reads API configuration from local extension storage.
-4. Sends an OpenAI-compatible request to OpenRouter.
-5. Adds OpenRouter attribution headers (`HTTP-Referer` and `X-Title`).
-6. Parses and validates structured issue offsets.
-7. Supports a setup-time connection test.
+### 3.2 The five invariants
 
-### Content integration
+Each is enforced at a choke point and asserted by tests, not left to convention.
 
-`content.js` discovers supported editable elements using event delegation. After a 700 ms pause, text is checked through the service worker. The script injects a high-z-index assistant button and review panel, supports individual and bulk acceptance, and dispatches a bubbling `InputEvent` after replacement so frameworks such as WhatsApp's UI can observe the edit.
+**1. The service worker owns every network call.** The content script holds no key and no
+transport. A compromised page can ask for work; it cannot make a request.
 
-### User interfaces
+**2. The shutdown gate runs first, twice.** Once in the service worker message handler,
+once inside `runTask`. Both run before the model catalogue is consulted, so a disabled
+extension does not even perform a capability lookup.
 
-- `onboarding.*`: four-step setup and connection-testing wizard.
-- `popup.*`: compact status and settings launcher.
-- `options.*`: persistent endpoint, key, model, language, and enable/disable controls.
-- `content.css`: responsive in-page review UI, focus states, and reduced-motion handling.
+**3. Prompt layers are ordered so a later layer cannot relax an earlier one.**
 
-## 4. Privacy and security assessment
+```
+safety → fidelity → anti-slop → mode → profile → locale → platform → untrusted → output
+```
 
-### Implemented protections
+`composeSystemPrompt` is pure — same inputs, same string — and the ordering is asserted
+end to end, including with a hostile custom mode present.
 
-- Password fields are absent from the editable selector.
-- API keys are not placed in content scripts or page DOM.
-- Credentials are stored in `chrome.storage.local`, not sync storage.
-- API calls occur in the extension service worker.
-- Model output is escaped before insertion into UI HTML.
-- Suggestions are range-validated against the submitted text.
-- Packaging refuses likely embedded OpenAI/OpenRouter secrets.
-- There is no remotely hosted executable code.
-- Content Security Policy remains Chrome's Manifest V3 default.
+**4. Model output is untrusted.** Tolerant JSON extraction (fences, prose wrappers,
+trailing commas, prototype-pollution stripping) → strict schema validation against
+`task-schemas.js` → task post-processing → guardrail enforcement. A response that fails
+any stage produces an error, never a partial result presented as success.
 
-### Material caveats for review
+**5. Nothing generative is ever auto-applied.** `autoApply: false` is on every rewrite
+result, and `neverAutoApply` is a guardrail a custom mode cannot switch off.
 
-- `chrome.storage.local` is appropriate for this BYOK design but is not an operating-system secrets vault. Malware or an attacker with local browser-profile access may obtain stored values.
-- The full current field is sent to OpenRouter after a typing pause. This is disclosed in onboarding, README, and privacy policy.
-- OpenRouter and the selected upstream model may have their own logging and retention policies.
-- `<all_urls>` is a powerful permission. It matches the product requirement but will receive additional Web Store review. A least-privilege alternative would use optional host permissions and per-site activation.
-- AI output is untrusted and can be wrong. Users are reminded to review suggestions.
+### 3.3 The guardrail layer
 
-## 5. UX behavior
+This is where v2 differs most from v1. After the model responds:
 
-1. Installation launches onboarding.
-2. The user creates/pastes an OpenRouter key, selects a model, and runs a live connection test.
-3. The user selects language and proofreading preference.
-4. In an editable field, a green WriteRight control appears.
-5. After a typing pause, the assistant displays issue count and writing quality status.
-6. Opening the panel reveals categorized correction cards.
-7. The user accepts one suggestion or all current suggestions.
+- **Fidelity check** extracts numbers, currency, percentages, dates, times, URLs, emails,
+  @handles, identifiers, code spans and proper nouns from the original and compares them
+  against the proposal. Arabic-Indic digits normalise, so `٤٥٠` and `450` compare equal;
+  Arabic orthographic variants normalise, so `إلى` and `الي` do not read as a change.
+- **Position-flip detection** in English and Arabic. A refusal rewritten into agreement
+  blocks apply.
+- **Anti-slop re-evaluation.** Slop the model *introduced* is a failure, weighted
+  separately from slop it failed to remove.
+- **Proportional-edit bounds.** A rewrite at 40% of the original length usually means
+  character was stripped; at 220% it usually means material was added.
+- **Prohibited-assurance scan** on the output text itself.
 
-Empty, loading, success, and API-error states are implemented. Layout adapts below 440 px, keyboard focus is visible, and animation honors `prefers-reduced-motion`.
+A dropped fact, an invented date, a reversed position or an assurance claim sets
+`blocked: true`, and the UI cannot apply a blocked result.
 
-## 6. Distribution and marketing deliverables
+### 3.4 Untrusted content
 
-- `STORE_LISTING.md`: title, short copy, long copy, category, permission rationale, and submission checklist.
-- `PRIVACY_POLICY.md`: data handling, storage, sharing, retention, permissions, and contact route.
-- `store-assets/screenshot-1-whatsapp.png`: 1280×800 primary workflow.
-- `store-assets/screenshot-2-setup.png`: 1280×800 OpenRouter onboarding.
-- `store-assets/screenshot-3-privacy.png`: 1280×800 privacy positioning.
-- `store-assets/promo-small.png`: 440×280 promotional tile.
-- `store-assets/promo-marquee.png`: 1400×560 marquee artwork.
-- Editable SVG sources accompany every marketing image.
-- `package.sh`: repeatable validator and Chrome upload ZIP builder.
+Page text, quoted conversation and web-search results all pass through
+`src/core/untrusted.js`: credential redaction, injection neutralisation, and an envelope
+the content cannot close because the fence is escaped inside it. The accompanying prompt
+clause states the content is data and must never be followed as instruction.
 
-## 7. Validation completed
+This reduces prompt injection. It does not eliminate it, and nothing in the product says
+otherwise.
 
-- All extension JavaScript parses with `node --check`.
-- `manifest.json` parses as valid JSON.
-- `git diff --check` reports no whitespace errors.
-- Packaging scans for likely embedded API keys.
-- ZIP integrity is checked with `unzip -t`.
-- Marketing PNG dimensions match Chrome Web Store asset dimensions.
+---
 
-## 8. Known limitations and recommended next work
+## 4. Verification
 
-1. **Real-browser QA:** This environment did not provide a Chrome binary, so the extension was not end-to-end exercised inside WhatsApp Web. Perform a manual acceptance pass in current Chrome before store submission.
-2. **Rich editors:** Editors that use nested iframes, canvas rendering, closed shadow roots, or custom state reconciliation can require site-specific adapters.
-3. **Underline precision:** Native plain inputs do not expose styleable text ranges. The current MVP marks a field with issue styling and shows precise issue ranges in the review panel; a future mirror-layer renderer could underline exact ranges in textarea/input controls.
-4. **Offset robustness:** If a page changes text between analysis and acceptance, current text is rechecked after edits, but a stronger implementation should verify `original` at the returned range before applying.
-5. **Model compatibility:** OpenRouter models differ in JSON-mode behavior. The default is designed for OpenAI-compatible structured output, but arbitrary model choices should be compatibility-tested.
-6. **Automated tests:** Add unit tests for issue validation/replacement and Playwright extension tests against textarea, input, contenteditable, and a controlled WhatsApp-like editor fixture.
-7. **Store privacy form:** The publisher must answer Chrome's privacy-practices questionnaire and provide the public privacy-policy URL. These dashboard actions cannot be completed from source code.
-8. **Support identity:** GitHub Issues is the current contact route. A monitored support email and verified domain would improve store trust.
+```
+npm run verify     # lint, secret scan, build, unit tests, integration journeys
+npm run package    # validated runtime archive + SHA-256
+```
 
-## 9. Reviewer prompts for Opus
+| Stage | Result |
+|---|---|
+| Lint — syntax, manifest validity, prohibited assurance claims, `console.log` ban | clean, 136 files |
+| Secret scan over the whole tree | clean |
+| Build | 16 files, 204.3 kB |
+| Unit | **461 assertions, 0 failures** |
+| Integration journeys | **15, 0 failures** |
+| Package | 17 entries, 68.2 kB, allow-list enforced |
 
-Please review specifically:
+The tests that matter most are the negative ones:
 
-- Whether broad host permission is justified or should become optional per-site access.
-- Whether storing BYOK credentials in `chrome.storage.local` is acceptable for the target audience.
-- Whether the prompt/output contract handles enough OpenRouter model variation.
-- Whether contenteditable replacement is sufficiently safe for React-controlled editors and WhatsApp Web.
-- Whether exact-range verification should block stale suggestions before v1 release.
-- Whether privacy disclosures satisfy Chrome Web Store Limited Use expectations.
-- Whether a first-party proxy is warranted for abuse controls, schema normalization, and key isolation.
+- **Zero-call sweep.** All seven tasks × three shutdown scopes, driven through a fetch spy
+  that throws on any call. 21 assertions that nothing left the browser.
+- **Invented-citation stripping.** A researched review citing a URL the search never
+  returned has the citation removed and the claim downgraded, end to end.
+- **Model self-assessment overruled.** A mode test where the model marks its own output as
+  passing, on an output that invented a date, still fails.
+- **Export contains no key.** Asserted against an explicit delete, a depth-wise key strip,
+  a settings whitelist, and a per-string credential redaction — four independent
+  mechanisms, each tested.
+- **Import never writes a key**, and an existing key survives an import rather than being
+  cleared.
 
-## 10. Release recommendation
+---
 
-**Recommendation: release-candidate, not yet unconditional production approval.** The code and listing package are complete enough for local installation and Web Store upload. Before public launch, complete one manual Chrome/WhatsApp acceptance pass, confirm the selected default model remains available in OpenRouter, host the privacy policy at a stable public URL, and complete the Web Store privacy questionnaire.
+## 5. Answers to the v1 reviewer questions
+
+v1 §9 asked seven questions. Each now has an implementation and a location.
+
+### 5.1 Is broad host permission justified, or should it become optional per-site?
+
+**Justified for this version; optional per-site is the correct next step and is not
+implemented.** Reasoning, alternatives considered, and the rejection of each are written
+up in `docs/PERMISSIONS.md`, which the packaging step checks against the manifest and
+refuses to package without.
+
+The honest position: a fixed site list breaks on internal tooling, which is where most
+professional writing happens. `activeTab` alone would require a toolbar click on every
+page. Optional host permissions are the right long-term shape, and the README lists this
+as limitation 7 rather than pretending it is done.
+
+What blunts the permission in practice: the content script attaches only on focus of an
+editable field; nearby context needs two opt-ins; and the zero-call guarantee means a
+disabled extension with `<all_urls>` makes no requests at all.
+
+### 5.2 Is `chrome.storage.local` acceptable for BYOK credentials?
+
+**Yes, for this threat model, and the alternative is worse.** `storage.sync` would copy
+the key to Google's servers, which is a real and avoidable exposure; the extension
+deliberately does not use it. There is no OS keychain available to an extension.
+
+What was added in v2 beyond v1: the key is never returned to any UI surface
+(`GET_STATE` strips it and returns only `hasKey`), it is excluded from exports by four
+independent mechanisms, it is never written by an import, and the credential scanner runs
+over the repository, over every packaged file, over exports, over captured page context
+and over history entries.
+
+The residual risk — local malware or profile access — is stated in §7 rather than
+engineered away, because it cannot be.
+
+### 5.3 Does the prompt/output contract handle enough model variation?
+
+**Yes, and it degrades rather than failing.** `src/core/model-compat.js` derives
+capabilities from the catalogue's `supported_parameters`:
+
+- No `response_format`? The field is omitted — some providers reject it outright — the
+  prompt asks for JSON in prose, and the tolerant parser recovers it. A warning is
+  surfaced.
+- No tool support? Researched review is **blocked with an explanation**, before any
+  request. Capability unknown is treated the same as absent, because a silent tool failure
+  produces uncited claims, which is the worst outcome in the product.
+- Context window known and too small? Refused before the call, with the numbers stated.
+- Catalogue unreachable? Network → cache → offline fallback list, with a visible notice
+  saying the data may be stale.
+
+### 5.4 Is contenteditable replacement safe for React-controlled editors and WhatsApp Web?
+
+**Improved, and still the weakest area.** The native setter is invoked through the
+prototype descriptor so React's value tracker sees the change, and a bubbling
+`InputEvent` with `inputType: 'insertReplacementText'` is dispatched. Highlighting uses
+the CSS Custom Highlight API specifically so the page's own DOM is never mutated — the
+alternative, wrapping text in spans, breaks controlled editors.
+
+**This cannot be verified without a browser, and has not been.** It is section C of
+`docs/MANUAL_TEST_PLAN.md`.
+
+### 5.5 Should exact-range verification block stale suggestions before release?
+
+**Yes, and it does.** `src/core/ranges.js` fingerprints every issue — the exact slice plus
+a window either side — and relocates it against the current text before applying. Three
+outcomes: unchanged in place; found shifted, and applied at the new offsets; or **not
+uniquely locatable, and discarded**. The third case is the important one. Applying an
+approximate range edits the wrong words, which is worse than doing nothing.
+
+Undo restores the exact previous string and caret from WriteRight's own bounded stack,
+because many editors clear their native undo when a value is set programmatically.
+
+### 5.6 Do the privacy disclosures satisfy Limited Use expectations?
+
+**They are written to.** `PRIVACY_POLICY.md` was rewritten for v2, and
+`docs/SUBMISSION_CHECKLIST.md` §6 pre-answers every dashboard question with the basis for
+each answer. The three Limited Use certifications are all truthfully "yes" — there is no
+backend, so there is nothing to sell, transfer or repurpose.
+
+Whether a reviewer agrees is their call, not something this repository can assert.
+
+### 5.7 Is a first-party proxy warranted?
+
+**No, and it would make the product worse.** A proxy would create exactly the thing the
+architecture avoids: a server that sees every user's writing and holds credentials.
+"There is no WriteRight server" is a stronger privacy statement than any policy text, and
+it is only true because there is no proxy.
+
+The things a proxy would have bought were solved locally instead: schema normalisation in
+`task-schemas.js`, model variation in `model-compat.js`, and abuse control is moot when
+the user pays their own OpenRouter bill.
+
+---
+
+## 6. Status of the eight v1 limitations
+
+| # | v1 limitation | v2 status |
+|---|---|---|
+| 1 | No real-browser QA | **Still open.** No Chrome binary here and browser downloads are blocked at the network layer. `docs/MANUAL_TEST_PLAN.md` written for a human to run |
+| 2 | Rich editors need site adapters | **Addressed.** Adapters for WhatsApp Web, Gmail, LinkedIn, Slack, Notion, plus a generic fallback, each with multiple candidate selectors and a fail-safe that returns no context rather than the wrong context |
+| 3 | Underline precision | **Addressed for contenteditable** via the CSS Custom Highlight API, with severity colours and overlap flattening. `<input>`/`<textarea>` keep a field marker — they contain no text nodes — and the panel lists the exact text. Documented, not hidden |
+| 4 | Offset robustness | **Addressed.** See §5.5 |
+| 5 | Model compatibility | **Addressed.** See §5.3 |
+| 6 | No automated tests | **Addressed.** 461 unit + 15 integration assertions. Playwright extension tests remain impossible here for the same reason as #1 |
+| 7 | Store privacy form | **Prepared.** Every answer pre-written with its basis in `docs/SUBMISSION_CHECKLIST.md` §6. The dashboard action itself needs a publisher account |
+| 8 | Support identity | **Still open.** GitHub Issues remains the contact route. Depends on the naming decision |
+
+---
+
+## 7. Known limitations, current
+
+1. **No real-browser acceptance testing.** The largest gap. Nothing in §5.4, and nothing
+   visual, has been confirmed in Chrome.
+2. **Exact-range underlines need text nodes.** Plain inputs and textareas get a
+   field-level marker.
+3. **Site adapters depend on selectors that sites change without notice.** Mitigated by
+   multiple candidates and a fail-safe, not eliminated.
+4. **Proper-noun extraction is approximate**, so a dropped name warns rather than blocks.
+   Blocking on an approximate signal would train users to ignore the warning.
+5. **Position-flip detection is narrow by design.** It catches explicit reversals, not
+   subtle softening of a boundary.
+6. **Custom-mode validation is pattern-based** and cannot catch every paraphrase. It is a
+   second line of defence; prompt layer ordering is the first.
+7. **Prompt injection is reduced, not solved.**
+8. **Some native-search providers return no citation annotations** (Anthropic and Google
+   native search). The verdict then degrades to *unverifiable* rather than trusting the
+   model's uncited claims.
+9. **`<all_urls>`.** See §5.1.
+10. **`chrome.storage.local` is not an OS secrets vault.** See §5.2.
+11. **The public name is unresolved.** See §9.
+
+---
+
+## 8. Release recommendation
+
+**Do not publish yet.** Three blockers, in order:
+
+1. **Run `docs/MANUAL_TEST_PLAN.md` in Chrome.** Sections C (exact ranges) and E (Arabic
+   RTL) cover behaviour that has no automated coverage at all. Sections F and G verify the
+   two claims the product makes most loudly — that logic review searches nothing, and that
+   a disabled extension calls nothing — in DevTools rather than in a test double.
+2. **Capture five real runtime screenshots.** The three currently in `store-assets/` are
+   mockup-derived and labelled not store-ready. Shipping a mockup as a screenshot is both
+   a store policy violation and a false statement about the product.
+3. **Resolve the name.** See §9.
+
+Everything else is done: the package validates, the checksum is emitted, the permission
+rationale is written and machine-checked against the manifest, the privacy disclosures
+are pre-answered, and the submission checklist distinguishes what is complete from what
+is blocked and on whom.
+
+**The extension has not been submitted to the Chrome Web Store.** No upload has been made
+through any publisher account.
+
+---
+
+## 9. Naming — to be redone
+
+Run 15 produced `NAMING_RESEARCH.md`: 42 candidates, screened against nine criteria
+including Arabic phonology, with a shortlist of **Saqel**, **Tanqih** and **Sabk**, and
+live ICANN RDAP evidence for 14 domains.
+
+**This run is being redone in a separate session**, so treat the current shortlist as
+provisional input rather than a conclusion. Two things from it are worth carrying forward
+regardless:
+
+- **The method held up.** RDAP is queryable and gives real registration dates and
+  registrar nameservers, which is what exposed `usewazn.com` as an active project and
+  killed that candidate.
+- **The gap is real and must be closed elsewhere.** No trademark register could be queried
+  from this environment — USPTO, UK IPO, EUIPO and WIPO all require JavaScript or an
+  authenticated session. **No trademark search has been performed, and no claim of legal
+  clearance is made anywhere in this repository.** A redo should either run from an
+  environment with register access or hand that step to a professional.
+
+Until a name is chosen, `src/core/constants.js` carries
+`PUBLIC_NAME_STATUS = 'provisional'` so the state is visible in the code rather than only
+in a document. The working name must not be published: its conflicts are documented in
+`NAMING_RESEARCH.md` §1.
+
+---
+
+## 10. Reviewer prompts for Opus
+
+The v1 questions are answered in §5. These are the ones v2 raises.
+
+1. **Is the guardrail layer the right place to block?** A dropped number blocks apply. Is
+   hard blocking correct, or should a fidelity failure be a prominent warning the user can
+   override, given that a false positive on an approximate extractor trains people to
+   ignore it? The current split — facts block, names warn — is a judgement call.
+
+2. **Is `stripCertainty` too blunt?** It removes a whole sentence containing a banned
+   certainty phrase and tells the user it did. Sentence granularity is the safe direction,
+   but it can remove useful content around the offending phrase.
+
+3. **Is the two-switch consent model for nearby context too much friction?** Global
+   preference *and* per-site consent. It is deliberately conservative. Does it make a
+   genuinely useful feature undiscoverable?
+
+4. **Should researched review be permitted on a model with unknown tool support?**
+   Currently it is refused, because a silent tool failure yields uncited claims. The cost
+   is that a legitimate model missing from the catalogue cannot be used for research at
+   all.
+
+5. **Is the Arabic register split right?** Egyptian Arabic for Casual, MSA for the other
+   four. Correct for Egypt and defensible across the Levant; a Gulf or Maghreb user may
+   find Egyptian colloquial as foreign as MSA is stiff. Is per-profile dialect selection
+   needed before launch, or after?
+
+6. **Is the anti-slop advisory tier calibrated correctly?** `synonym-cycling`,
+   `fake-profound-kicker`, `formatting-slop`, `em-dash-crutch`, `-ize` spellings and
+   meaning-sensitive word pairs are advisory because mechanical detection produces false
+   positives. Too cautious, or not cautious enough?
+
+7. **Does the honest-claims posture go far enough, or too far?** The product refuses to
+   say output is undetectable, human, or correct, and refuses to tell the user they are
+   right. Commercially this is unusual. Is the calibrated-verdict vocabulary
+   (*Supported by the provided context* / *Needs verification* / *Conflicts with the
+   source*) clear enough to a non-technical user, or does it read as evasive?
+
+8. **Is 461 unit assertions the right shape of coverage?** The bias is heavily toward
+   negative paths and refusals. Is anything important untested that is *not* blocked on a
+   browser?
