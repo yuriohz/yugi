@@ -1,85 +1,142 @@
 /**
- * Task definitions: prompt composition plus output validation, per task.
+ * Task builders: prompt composition plus task-specific post-processing.
  *
- * Run 1 ships `proofread` at v1 parity so no existing behaviour regresses.
- * Later runs add rewrite, review, research_review, test_mode, tone and
- * reader_reaction. Unimplemented tasks fail loudly rather than silently
- * returning something plausible.
+ * A builder returns:
+ *   { body, timeoutMs, context, postProcess?, warnings? }
+ *
+ * Schema validation happens in the router, against `src/core/task-schemas.js`,
+ * so the prompt description and the validator can never drift apart.
  */
 import { TASKS, LIMITS } from '../core/constants.js';
+import { composeSystemPrompt, composeUserMessage } from '../core/prompts.js';
+import { schemaDescriptionFor } from '../core/task-schemas.js';
+import { detectSlop } from '../core/slop-detector.js';
 import { ApiError } from './openrouter.js';
 
 const builders = Object.create(null);
 
 export function registerTask(task, builder) { builders[task] = builder; }
+export function registeredTasks() { return Object.keys(builders); }
 
 export async function buildRequest(payload) {
   const builder = builders[payload.task];
   if (!builder) {
-    throw new ApiError(`Task "${payload.task}" is not implemented in this build.`, { code: 'not_implemented' });
+    throw new ApiError(
+      `Task "${payload.task}" is not available in this build.`,
+      { code: 'not_implemented' }
+    );
   }
   return builder(payload);
 }
 
-// ---------------------------------------------------------------- proofread
-
-registerTask(TASKS.PROOFREAD, ({ text, settings }) => ({
-  timeoutMs: LIMITS.REQUEST_TIMEOUT_MS,
-  context: { text },
-  body: {
-    model: settings.model,
-    temperature: 0,
-    response_format: { type: 'json_object' },
-    messages: [
-      { role: 'system', content: proofreadSystem(settings) },
-      { role: 'user', content: text }
-    ]
-  },
-  validate: (value, context) => ({ issues: validateIssues(value?.issues, context.text) })
-}));
-
-function proofreadSystem(settings) {
-  const locale = settings.locale || 'en-GB';
-  return [
-    'You are a precise proofreader.',
-    `Target locale: ${locale}. Use that locale's spelling and punctuation conventions.`,
-    'Report only clear errors in spelling, grammar, punctuation, and outright clarity faults.',
-    'Never rewrite for preference, tone, or style.',
-    'Never change names, numbers, URLs, quoted text, or technical terms.',
-    'Return JSON only, with this shape:',
-    '{"issues":[{"start":number,"end":number,"original":string,"replacement":string,"message":string,"category":"spelling|grammar|punctuation|clarity"}]}',
-    'start and end are zero-based JavaScript string offsets into the exact user text.',
-    'original must equal the user text between start and end.'
-  ].join(' ');
+/**
+ * Shared request-body assembly. Honours the capability plan: `response_format`
+ * is only sent when the model advertises support, because some providers reject
+ * the field outright.
+ */
+export function baseBody({ model, plan, messages, temperature = 0.2, maxTokens, tools }) {
+  const body = { model, temperature, messages };
+  if (plan?.useResponseFormat !== false) body.response_format = { type: 'json_object' };
+  if (maxTokens) body.max_tokens = maxTokens;
+  if (tools?.length) body.tools = tools;
+  // Ask OpenRouter to include accounting so cost can be reported rather than guessed.
+  body.usage = { include: true };
+  return body;
 }
 
-/** Drop anything whose offsets do not describe a real slice of the submitted text. */
-export function validateIssues(issues, text) {
+// ---------------------------------------------------------------- proofread
+
+registerTask(TASKS.PROOFREAD, ({ text, settings, model, plan, profile, localeLayer, platform }) => {
+  const protectedTerms = profile?.protectedTerms || [];
+  const system = composeSystemPrompt({
+    mode: PROOFREAD_MODE,
+    profile,
+    locale: localeLayer,
+    platform,
+    output: {
+      schemaDescription: schemaDescriptionFor(TASKS.PROOFREAD),
+      notes: ['Report only clear errors. Never rewrite for preference, tone, or style.']
+    }
+  });
+
+  return {
+    timeoutMs: LIMITS.REQUEST_TIMEOUT_MS,
+    context: { text, protectedTerms },
+    body: baseBody({
+      model,
+      plan,
+      temperature: 0,
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: composeUserMessage({ text }) }
+      ]
+    }),
+    postProcess: (value, context) => ({
+      issues: validateIssues(value.issues, context.text, context.protectedTerms)
+    })
+  };
+});
+
+const PROOFREAD_MODE = [
+  '# Task: proofread',
+  'Find clear errors only: spelling, grammar, punctuation, and outright clarity faults such as a broken sentence.',
+  'Do not restyle, retone, shorten, lengthen, or improve anything that is already correct.',
+  'Do not touch names, numbers, URLs, quoted text, code, or technical terms.',
+  'If a passage is correct but you would have written it differently, leave it alone.'
+].join('\n');
+
+/**
+ * Offsets from a model are untrusted. Anything that does not describe a real
+ * slice of the submitted text is dropped, not repaired, because a repaired
+ * offset silently edits the wrong words.
+ */
+export function validateIssues(issues, text, protectedTerms = []) {
   if (!Array.isArray(issues)) return [];
   const seen = new Set();
   const out = [];
+
   for (const issue of issues) {
     const { start, end } = issue || {};
     if (!Number.isInteger(start) || !Number.isInteger(end)) continue;
     if (start < 0 || end > text.length || end <= start) continue;
+
     const actual = text.slice(start, end);
     if (typeof issue.original === 'string' && issue.original !== actual) continue;
     if (typeof issue.replacement !== 'string') continue;
     if (issue.replacement === actual) continue;
+
+    // A correction may not alter a protected term.
+    if (protectedTerms.some(term => term && actual.includes(term) && !issue.replacement.includes(term))) continue;
+
     const key = `${start}:${end}:${issue.replacement}`;
     if (seen.has(key)) continue;
     seen.add(key);
+
     out.push({
       start,
       end,
       original: actual,
       replacement: issue.replacement,
-      message: typeof issue.message === 'string' ? issue.message : 'Suggested correction',
-      category: ['spelling', 'grammar', 'punctuation', 'clarity'].includes(issue.category)
-        ? issue.category
-        : 'grammar'
+      message: issue.message || 'Suggested correction',
+      category: issue.category || 'grammar'
     });
     if (out.length >= 50) break;
   }
-  return out.sort((a, b) => a.start - b.start);
+
+  // Drop overlaps: the later issue in document order loses, because applying
+  // both would corrupt the text.
+  const sorted = out.sort((a, b) => a.start - b.start);
+  const result = [];
+  let lastEnd = -1;
+  for (const issue of sorted) {
+    if (issue.start < lastEnd) continue;
+    result.push(issue);
+    lastEnd = issue.end;
+  }
+  return result;
+}
+
+/** Local pre-flight hints shared by the generative tasks. */
+export function preflightFindings(text, { protectedTerms = [], script = 'auto' } = {}) {
+  return detectSlop(text, { protectedTerms, script, includeAdvisory: false, maxFindings: 40 });
 }

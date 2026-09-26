@@ -54,7 +54,12 @@ Status values: `complete`, `in progress`, `blocked`, `not started`.
 
 | Field | Value |
 |---|---|
-| **Status** | not started |
+| **Status** | complete |
+| **Commit** | `2a5ff75` |
+| **Tests performed** | `npm run verify`; 155 unit assertions total. New: `openrouter.test.js` (16), `router.test.js` (20), `schema.test.js` (19), `cost.test.js` (9), `model-compat.test.js` (14). Every lifecycle branch is driven through an injected fake transport; the shutdown and compatibility paths use a `forbiddenFetch` spy that fails the test if any request is attempted. |
+| **Acceptance criteria** | ✅ Unknown tasks, non-string text, empty text and oversized text are rejected before any network call. ✅ All seven tasks have strict schemas and prompt descriptions generated from the same source. ✅ Timeout, cancel and retry are unit-tested: cancellation before the first attempt makes zero calls; an abort with no user cancellation is reported as a timeout, not a cancel. ✅ 4xx is never retried (401 → 1 call); 429/5xx/network are retried to the cap with full-jitter backoff. ✅ Cost is `reported` from OpenRouter usage, `estimated` from catalogue pricing, or explicitly `unknown` — never silently zero. |
+| **Remaining issues** | `rewrite`, `review`, `research_review`, `test_mode`, `tone` and `reader_reaction` builders are registered in Runs 4, 6, 7, 9 and 14. Until then they raise `not_implemented` rather than returning a plausible stub. |
+| **Evidence** | Zero-call assertions in `router.test.js` for global, website and tab shutdown, model incompatibility and context overflow. Catalogue degradation path asserted: network → cache → offline fallback with a visible notice. |
 
 ### Run 4 — The five modes and guardrails
 
