@@ -76,9 +76,10 @@ export const SLOP_RULES = Object.freeze([
     fix: 'State the second half directly.',
     severity: 'high',
     detect: [
-      /\b(?:it'?s|this is|that'?s)\s+not\s+(?:just\s+)?[^.!?;]{1,60}?[,.]?\s+it'?s\s+/gi,
-      /\bthe\s+question\s+is\s?n'?o?t\s+[^.!?;]{1,60}?,\s*it'?s\s+/gi,
-      /\bnot\s+(?:about|because of)\s+[^.!?;]{1,60}?[,.]\s*(?:it'?s|but)\s+/gi
+      // Handles "it is not X, it's Y", "this isn't X. It's Y", "that's not X but Y".
+      /\b(?:it|this|that)(?:\s+is|'s|\u2019s)?\s*n[o\u2019']?t\s+(?:just\s+)?[^.!?;\n]{1,60}[.,;]?\s*(?:it'?s|it\u2019s|it is)\s+/gi,
+      /\bthe\s+question\s+(?:is\s*n[o\u2019']?t|isn[\u2019']t)\s+[^.!?;\n]{1,60}[.,;]?\s*(?:it'?s|it\u2019s|it is)\s+/gi,
+      /\bnot\s+(?:about|because of)\s+[^.!?;\n]{1,60}?[,.]\s*(?:it'?s|but)\s+/gi
     ]
   },
   {
@@ -108,7 +109,11 @@ export const SLOP_RULES = Object.freeze([
     fix: 'Rewrite as a plain sentence.',
     severity: 'medium',
     detect: [
-      /(?:^|[.!?]\s+|\n)\s*(?:the (?:best|worst|real|hard|key|whole|only|weird|funny|interesting) (?:part|thing|bit|truth|question|detail|catch|problem|reason)|the detail that [a-z ]{3,40}|the result)\s*:\s+[a-z]/g
+      // The noun phrase may be capitalised at a sentence start; the reveal after the
+      // colon must be lowercase, which is what makes it a dramatic reveal rather
+      // than a label, a list, or a quotation.
+      /(?:^|[.!?]\s+|\n)\s*[Tt]he (?:best|worst|real|hard|key|whole|only|weird|funny|interesting|surprising) (?:part|thing|bit|truth|question|detail|catch|problem|reason|insight)\s*:\s+[a-z]/g,
+      /(?:^|[.!?]\s+|\n)\s*[Tt]he (?:detail|reason|trick|bit) that [a-z ]{3,40}\s*:\s+[a-z]/g
     ]
   },
   {
@@ -212,7 +217,7 @@ export const SLOP_RULES = Object.freeze([
     fix: 'End on the last concrete point or next action.',
     severity: 'medium',
     detect: [
-      /(?:^|\n)\s*(?:in conclusion|to sum up|to summarise|to summarize|overall,|ultimately,|in summary)\b/gi
+      /(?:^|\n|[.!?]\s+)\s*(?:in conclusion|to sum up|to summarise|to summarize|overall,|ultimately,|in summary)\b/gi
     ]
   },
   {
@@ -288,7 +293,7 @@ export const ARABIC_SLOP_RULES = Object.freeze([
     why: 'Formal padding that adds no information.',
     fix: 'Use the plain Arabic verb or noun.',
     severity: 'high',
-    detect: [/\b(?:يُعَدُّ|تُعَدُّ|يعد بمثابة|في هذا الصدد|جدير بالذكر|تجدر الإشارة إلى)\b/g]
+    detect: [/(?:يُعَدُّ|تُعَدُّ|يعد بمثابة|في هذا الصدد|جدير بالذكر|تجدر الإشارة إلى)/g]
   },
   {
     id: 'ar-empty-connective',
@@ -298,7 +303,7 @@ export const ARABIC_SLOP_RULES = Object.freeze([
     fix: 'Join the clauses directly.',
     severity: 'medium',
     advisory: true,
-    detect: [/\b(?:ومن ناحية أخرى|وفي نهاية المطاف|وفي الختام|بشكل عام|في واقع الأمر|لا شك أن)\b/g]
+    detect: [/(?:ومن ناحية أخرى|وفي نهاية المطاف|وفي الختام|بشكل عام|في واقع الأمر|لا شك أن)/g]
   },
   {
     id: 'ar-ceremonial-padding',
@@ -317,7 +322,7 @@ export const ARABIC_SLOP_RULES = Object.freeze([
     why: 'Announces significance instead of showing it.',
     fix: 'State the fact plainly.',
     severity: 'high',
-    detect: [/\b(?:يمثل نقلة نوعية|يشكل علامة فارقة|يلعب دوراً محورياً|يلعب دورا محوريا|ذو أهمية قصوى)\b/g]
+    detect: [/(?:يمثل نقلة نوعية|يشكل علامة فارقة|يلعب دوراً محورياً|يلعب دورا محوريا|ذو أهمية قصوى)/g]
   }
 ]);
 

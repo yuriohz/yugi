@@ -43,7 +43,12 @@ Status values: `complete`, `in progress`, `blocked`, `not started`.
 
 | Field | Value |
 |---|---|
-| **Status** | not started |
+| **Status** | complete |
+| **Commit** | `1ba9263` |
+| **Tests performed** | `npm run verify`; 77 unit assertions total. New: `slop-detector.test.js` (15), `prompts.test.js` (14), `untrusted.test.js` (8), `slop-eval.test.js` (11), against the fixture corpus in `tests/fixtures/prose.js`. |
+| **Acceptance criteria** | ✅ Every upstream rule family is represented and attributed — `slop-rules.test.js` asserts all 20 English families plus 4 WriteRight-original Arabic rules exist, and that `UPSTREAM.commit` matches the SHA pinned in `THIRD_PARTY_NOTICES.md`. ✅ The detector finds seeded slop in all 16 English and 4 Arabic fixtures and fires no high-severity rule on 5 clean human samples or 2 clean Arabic samples. ✅ Prompt composition is pure (same inputs, same string), ordered (safety → fidelity → anti-slop → mode → profile → locale → platform → output), and asserted layer by layer. ✅ Untrusted content is fenced, credential-redacted, injection-neutralised, and cannot close its own envelope. |
+| **Remaining issues** | The detector is deliberately conservative: `synonym-cycling`, `fake-profound-kicker` and `formatting-slop` are marked advisory because mechanical detection produces false positives on legitimate prose. The model layer still carries those rules. |
+| **Evidence** | Fixture corpus `tests/fixtures/prose.js`; detector protects fenced code, inline code, URLs, emails, quoted text and user protected terms (`protectedRegions`, asserted). |
 
 ### Run 3 — Task router, OpenRouter client, and request lifecycle
 
