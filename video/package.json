@@ -1,0 +1,20 @@
+{
+  "name": "wordsaffron-launch-video",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "WordSaffron launch trailer — JS motion-graphics renderer (SVG -> resvg -> ffmpeg).",
+  "scripts": {
+    "frames": "node src/render-frames.js",
+    "audio": "node src/build-audio.js",
+    "video": "node src/render.js",
+    "all": "npm run audio && npm run video"
+  },
+  "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "1.1.0",
+    "@fontsource/inter": "5.2.8",
+    "@fontsource/source-serif-4": "5.2.6",
+    "@resvg/resvg-js": "2.6.2",
+    "wawoff2": "2.0.1"
+  }
+}

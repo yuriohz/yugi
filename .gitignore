@@ -13,3 +13,14 @@ coverage/
 .env.*
 *.key
 scratch/
+
+# Rendered video output and font/metric caches (regenerate with npm run video).
+video/out/
+video/assets/fonts/
+video/.metrics.json
+
+# generated texture cache
+video/assets/grain.b64
+
+# decoded PCM intermediates
+*.raw
