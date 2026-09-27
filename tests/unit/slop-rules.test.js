@@ -60,7 +60,7 @@ test('banned word list carries the upstream vocabulary', () => {
   assert.ok(EMPTY_PHRASES.includes('at the end of the day'));
 });
 
-test('Arabic rules are separate and marked as WriteRight originals', () => {
+test('Arabic rules are separate and marked as WordSaffron originals', () => {
   assert.ok(ARABIC_SLOP_RULES.length >= 4);
   for (const rule of ARABIC_SLOP_RULES) {
     assert.ok(rule.id.startsWith('ar-'));

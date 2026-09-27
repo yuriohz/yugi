@@ -30,12 +30,12 @@ export async function getCatalogue({ provider = 'openrouter', apiKey = '', fetch
   }
 
   if (cached?.models?.length) {
-    return { models: cached.models, source: 'cache', notice: 'Showing the last catalogue WriteRight downloaded. It may be out of date.' };
+    return { models: cached.models, source: 'cache', notice: 'Showing the last catalogue WordSaffron downloaded. It may be out of date.' };
   }
   return { models: fallbackCatalogueFor(provider).map(trimEntry), source: 'fallback', notice: FALLBACK_NOTICE.replace('OpenRouter', getProvider(provider).name) };
 }
 
-/** Keep only what WriteRight needs, so the cache stays small. */
+/** Keep only what WordSaffron needs, so the cache stays small. */
 function trimEntry(model) {
   return {
     id: model.id,
@@ -53,7 +53,7 @@ function trimEntry(model) {
  * Read the catalogue cache without touching the network.
  *
  * Used when building UI state: the snapshot must never issue a request on its
- * own, or opening the panel while WriteRight is switched off would break the
+ * own, or opening the panel while WordSaffron is switched off would break the
  * zero-call guarantee. An empty cache means capabilities are unknown, which
  * the UI states honestly instead of guessing.
  *

@@ -1,7 +1,7 @@
 /**
  * Language, register and direction.
  *
- * WriteRight defaults to British English. Arabic is first-class: Modern
+ * WordSaffron defaults to British English. Arabic is first-class: Modern
  * Standard Arabic for Polish, Polite, Professional & Firm and Technical Review,
  * and natural Egyptian Arabic for Casual, because MSA reads stiff in a chat.
  */
@@ -69,7 +69,7 @@ export function resolveLocale({ text = '', settings = {}, profile = null, mode =
   return { locale: english, script: script === 'unknown' ? 'latin' : script, direction: 'ltr', mixed: script === 'mixed' };
 }
 
-/** Accept only the Arabic locales WriteRight can actually write. */
+/** Accept only the Arabic locales WordSaffron can actually write. */
 export function normaliseArabicLocale(locale) {
   return locale === LOCALES.AR_EG || locale === LOCALES.AR ? locale : null;
 }

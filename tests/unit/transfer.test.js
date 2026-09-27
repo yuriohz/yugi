@@ -136,8 +136,8 @@ test('prototype pollution through the file is neutralised', () => {
 test('malformed, foreign and oversized files are refused with a clear reason', () => {
   assert.match(planImport('').errors[0], /empty/);
   assert.match(planImport('not json').errors[0], /not valid JSON/);
-  assert.match(planImport('[]').errors[0], /does not contain WriteRight settings/);
-  assert.match(planImport('{"format":"something.else"}').errors[0], /not a WriteRight settings export/);
+  assert.match(planImport('[]').errors[0], /does not contain WordSaffron settings/);
+  assert.match(planImport('{"format":"something.else"}').errors[0], /not a WordSaffron settings export/);
   assert.match(planImport(`{"format":"${EXPORT_FORMAT}","version":99}`).errors[0], /newer version/);
   assert.match(planImport(`{"format":"${EXPORT_FORMAT}","version":2,"x":"${'y'.repeat(1_000_001)}"}`).errors[0], /The limit is/);
 });
@@ -145,7 +145,7 @@ test('malformed, foreign and oversized files are refused with a clear reason', (
 test('an empty but valid file is refused rather than silently doing nothing', () => {
   const result = planImport(`{"format":"${EXPORT_FORMAT}","version":2}`);
   assert.equal(result.ok, false);
-  assert.match(result.errors[0], /nothing WriteRight could import/);
+  assert.match(result.errors[0], /nothing WordSaffron could import/);
 });
 
 test('an invalid profile is skipped with a reason, and the rest still import', () => {

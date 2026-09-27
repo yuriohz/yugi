@@ -3,6 +3,12 @@
 **Status: prepared, not submitted.** This build has not been uploaded to the Chrome Web
 Store. See `docs/SUBMISSION_CHECKLIST.md` for what remains.
 
+**Public name: WordSaffron** (approved 27 September 2026; tactile concept 04).
+The extension UI, icons, store listing, privacy policy and permissions copy use
+the approved name. The former working name survives only in preserved technical
+identifiers (settings export format, internal flags) and in the historical
+research record. No trademark clearance has been performed.
+
 ---
 
 ## Google AI Studio as a second provider
@@ -50,7 +56,7 @@ Four Arabic-specific patterns were added by this project and are marked as such.
 
 ### It will not invent things
 
-Before a rewrite can be applied, WriteRight extracts every number, amount, percentage,
+Before a rewrite can be applied, WordSaffron extracts every number, amount, percentage,
 date, time, URL, email address, @handle, identifier, code span and proper noun from your
 original and checks they survived. A dropped fact or an invented deadline blocks the
 result and tells you why. So does a rewrite that turns your refusal into agreement.
@@ -89,14 +95,14 @@ what it contradicts, and what is still unchecked.
 ### Shutdown that actually stops
 
 Three independent switches — global, per-website, per-tab-session. While any of them is
-off, WriteRight makes **no network request of any kind**. The gate runs in the service
+off, WordSaffron makes **no network request of any kind**. The gate runs in the service
 worker before a request is even constructed, and again inside the router, so a
 compromised page cannot route around it. Switching off also cancels work already in
 flight.
 
 ### Privacy
 
-- No backend. There is no WriteRight server.
+- No backend. There is no WordSaffron server.
 - No analytics, no telemetry.
 - Your API key stays in `chrome.storage.local` and is never synced to Google.
 - Nearby conversation context is off by default and needs two switches: the global
@@ -110,7 +116,7 @@ flight.
 
 Writing profiles with voice samples, protected terms and per-site rules · personal
 dictionary scoped globally, per profile or per site · custom modes and saved prompts with
-mode testing · favourite OpenRouter models with real capability display · exact-range
+mode testing · favourite models from your selected provider with real capability display · exact-range
 underlines via the CSS Custom Highlight API · word-level comparison · exact undo · tone
 analysis · reader-reaction readings · cost reported, estimated, or honestly labelled
 unknown.
@@ -125,7 +131,8 @@ unknown.
 - It has **not** been acceptance-tested in Chrome by this build process. See
   `docs/MANUAL_TEST_PLAN.md`.
 - It has **not** been submitted to the Chrome Web Store.
-- The public name is unresolved. See `NAMING_RESEARCH.md`.
+- The public name is approved (WordSaffron, 27 September 2026), but trademark
+  clearance and the domain purchase are still open. See `NAMING_RESEARCH.md`.
 
 ---
 
@@ -147,7 +154,7 @@ unknown.
 ## Verification
 
 ```
-npm run verify     # lint, secret scan, build, 492 unit + 16 integration assertions
+npm run verify     # lint, secret scan, build, 522 unit + 16 integration assertions
 npm run package    # runtime-only ZIP plus SHA-256
 ```
 

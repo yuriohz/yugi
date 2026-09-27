@@ -64,3 +64,14 @@ mentions OpenRouter and Google AI Studio and shows the provider selector. Promos
 use provider-neutral copy. Re-rendered every PNG using `@resvg/resvg-js` with
 `{ font: { loadSystemFonts: true } }`; renderer dependencies were kept outside the
 extension package. Runtime screenshots must still follow manual-test section M.
+
+### WordSaffron rebrand — 27 September 2026 (Stage 3)
+
+All five SVG/PNG pairs were redrawn in the approved Tactile palette with the
+WordSaffron name, serif wordmark, and speech-bubble mark. The setup mockup no
+longer names a specific example model; promos use the approved brand lines. Every
+PNG was re-rendered from its SVG with `@resvg/resvg-js` (`loadSystemFonts: true`,
+DejaVu fallback) and visually inspected. All five remain **design mockups** with
+an on-image disclaimer — the three `screenshot-*` files are still **not**
+store-ready, and the promos still need a final review (including the lockup
+typeface) before submission.

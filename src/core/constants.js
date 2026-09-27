@@ -3,14 +3,10 @@
  * worker, the content script, every UI surface, and the unit tests.
  */
 
-export const APP_NAME = 'WriteRight';
+export const APP_NAME = 'WordSaffron';
 
-/**
- * Working code name. The public name is unresolved pending the naming research
- * in Run 15 of EXECUTION_PLAN.md. Do not publish under this name until the
- * documented naming conflicts are addressed.
- */
-export const PUBLIC_NAME_STATUS = 'provisional';
+/** The public name was approved for the staged brand rollout. */
+export const PUBLIC_NAME_STATUS = 'approved';
 
 export const SCHEMA_VERSION = 2;
 
@@ -24,7 +20,7 @@ export const DEFAULT_MODEL = 'openai/gpt-4o-mini';
 /** Attribution headers OpenRouter asks integrators to send. */
 export const OPENROUTER_HEADERS = {
   'HTTP-Referer': 'https://github.com/yuriohz/yugi',
-  'X-Title': 'WriteRight Chrome Extension'
+  'X-Title': 'WordSaffron Chrome Extension'
 };
 
 /** OpenRouter's current server-side web search tool identifier. */

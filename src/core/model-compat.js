@@ -3,7 +3,7 @@
  *
  * OpenRouter models differ in whether they honour `response_format`, whether
  * they support tool calling (needed for web search), and how much context they
- * accept. WriteRight degrades gracefully instead of failing: if a model cannot
+ * accept. WordSaffron degrades gracefully instead of failing: if a model cannot
  * do structured output, the prompt asks for JSON in prose and the tolerant
  * parser recovers it. If a model cannot use tools, researched review is
  * disabled with an explanation rather than silently returning uncited claims.
@@ -76,7 +76,7 @@ export function planRequest(caps, want = {}) {
 
   const useResponseFormat = want.structuredOutput !== false && structuredKnown !== false;
   if (want.structuredOutput && structuredKnown === false) {
-    warnings.push('This model does not advertise structured output. WriteRight will ask for JSON in the prompt and repair the response if needed.');
+    warnings.push('This model does not advertise structured output. WordSaffron will ask for JSON in the prompt and repair the response if needed.');
   }
 
   let useTools = false;
@@ -86,7 +86,7 @@ export function planRequest(caps, want = {}) {
     } else if (toolsKnown === false) {
       blocked.push('This model does not support tool calling, so it cannot run a web search. Choose a model with tool support to use researched review.');
     } else {
-      blocked.push('WriteRight cannot confirm that this model supports tool calling. Researched review is disabled to avoid producing uncited claims.');
+      blocked.push('WordSaffron cannot confirm that this model supports tool calling. Researched review is disabled to avoid producing uncited claims.');
     }
   }
 

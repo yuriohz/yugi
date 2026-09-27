@@ -1,8 +1,10 @@
 <p align="center">
-  <img src="icons/icon128.png" width="96" height="96" alt="WriteRight logo">
+  <img src="icons/icon128.png" width="96" height="96" alt="WordSaffron logo">
 </p>
 
-<h1 align="center">WriteRight</h1>
+<h1 align="center">WordSaffron</h1>
+
+<p align="center"><em>A pinch of clarity. Still your words.</em></p>
 
 <p align="center"><strong>Rewrite, review and proofread anywhere you type — in English or Arabic.</strong></p>
 
@@ -29,12 +31,12 @@
 >
 > | | |
 > |---|---|
-> | Automated tests | ✅ 515 unit + 16 integration assertions, green |
+> | Automated tests | ✅ 522 unit + 16 integration assertions, green |
 > | Build and package | ✅ `npm run package` produces a validated runtime-only ZIP with a SHA-256 |
 > | Real Chrome acceptance testing | ❌ **Not performed.** No browser was available in the build environment. See [`docs/MANUAL_TEST_PLAN.md`](docs/MANUAL_TEST_PLAN.md) |
 > | Runtime screenshots | ❌ **None exist.** Everything in `store-assets/` and `design-v2/` is a mockup and is labelled as such |
 > | Chrome Web Store submission | ❌ **Not submitted.** See [`docs/SUBMISSION_CHECKLIST.md`](docs/SUBMISSION_CHECKLIST.md) |
-> | Public name | ⏳ Unresolved. "WriteRight" has documented conflicts; see [`NAMING_RESEARCH.md`](NAMING_RESEARCH.md) |
+> | Public name | ✅ **WordSaffron**, approved 27 September 2026; see [`NAMING_RESEARCH.md`](NAMING_RESEARCH.md) (trademark clearance still open) |
 
 ---
 
@@ -65,7 +67,7 @@ candidates, not orders. Afterwards the result is checked again, and slop the mod
 
 ### It will not invent things
 
-Before you can apply a rewrite, WriteRight extracts every number, amount, percentage,
+Before you can apply a rewrite, WordSaffron extracts every number, amount, percentage,
 date, time, URL, email address, @handle, identifier, code span and proper noun from your
 original and checks they survived. A dropped fact, an invented deadline, or a refusal
 turned into agreement blocks the result and tells you exactly what happened.
@@ -92,7 +94,7 @@ stripped and the claim downgraded. A contradiction blocks apply until you open t
 ### Shutdown that actually stops
 
 Three switches — global, per-website, per-tab-session. While any of them applies,
-WriteRight makes **no network request of any kind**. The gate runs before a request is
+WordSaffron makes **no network request of any kind**. The gate runs before a request is
 constructed and again inside the router, and switching off cancels work in flight. This is
 covered by automated tests that sweep all seven tasks under all three scopes and fail if a
 single request is attempted.
@@ -197,7 +199,7 @@ Design rules that are enforced, not merely intended:
 
 ```bash
 npm run build          # bundle src/ into a loadable dist/
-npm test               # 515 unit assertions
+npm test               # 522 unit assertions
 npm run test:browser   # 16 integration journeys
 npm run lint           # project rules, syntax, manifest, prohibited claims
 npm run scan:secrets   # credential scan over the whole tree
@@ -239,13 +241,15 @@ rationale in [`docs/PERMISSIONS.md`](docs/PERMISSIONS.md).
 | [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md) | Visual and interaction rules |
 | [`PRIVACY_POLICY.md`](PRIVACY_POLICY.md) | What is processed, and what never is |
 | [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) | Attribution, licences, pinned commits |
-| [`NAMING_RESEARCH.md`](NAMING_RESEARCH.md) | 42 candidates, evidence, a shortlist of three, and no claim of legal clearance |
+| [`NAMING_RESEARCH.md`](NAMING_RESEARCH.md) | Candidate research, evidence, and the WordSaffron approval record. No claim of legal clearance |
 | [`docs/PERMISSIONS.md`](docs/PERMISSIONS.md) | Every permission, justified |
 | [`docs/MANUAL_TEST_PLAN.md`](docs/MANUAL_TEST_PLAN.md) | The Chrome acceptance script that still has to be run |
 | [`docs/RELEASE_NOTES.md`](docs/RELEASE_NOTES.md) | v2.0.0 release notes |
 | [`docs/SUBMISSION_CHECKLIST.md`](docs/SUBMISSION_CHECKLIST.md) | What is done and what is blocked before submission |
 | [`docs/REVIEW_DECISIONS.md`](docs/REVIEW_DECISIONS.md) | Answers to the eight Opus reviewer prompts, with code pointers |
 | [`store-assets/README.md`](store-assets/README.md) | Provenance of every image. Nothing is passed off as a screenshot |
+| [`BRAND_GUIDELINES.md`](BRAND_GUIDELINES.md) | WordSaffron identity rules and rollout status |
+| [`WORDSAFFRON_MARKETING_COPY.md`](WORDSAFFRON_MARKETING_COPY.md) | Approved marketing and store copy pack |
 
 ---
 

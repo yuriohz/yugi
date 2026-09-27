@@ -43,7 +43,7 @@ export function buildExport(state = {}) {
     schemaVersion: SCHEMA_VERSION,
     exportedAt: new Date().toISOString(),
     // Stated in the file itself, so anyone who opens it can see the promise.
-    notice: 'This file contains WriteRight settings only. It does not contain your API key, your drafts, or any text from the pages you visited.',
+    notice: 'This file contains WordSaffron settings only. It does not contain your API key, your drafts, or any text from the pages you visited.',
     settings: {
       provider: settings.provider || 'openrouter',
       endpoint: settings.endpoint,
@@ -130,18 +130,18 @@ export function planImport(text, current = {}) {
     return fail(['That file is not valid JSON.']);
   }
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-    return fail(['That file does not contain WriteRight settings.']);
+    return fail(['That file does not contain WordSaffron settings.']);
   }
   if (parsed.format !== EXPORT_FORMAT) {
-    return fail([`That file is not a WriteRight settings export (format: ${String(parsed.format || 'missing')}).`]);
+    return fail([`That file is not a WordSaffron settings export (format: ${String(parsed.format || 'missing')}).`]);
   }
   if (Number(parsed.version) > EXPORT_VERSION) {
-    return fail([`That file was written by a newer version of WriteRight (file version ${parsed.version}, this build reads ${EXPORT_VERSION}).`]);
+    return fail([`That file was written by a newer version of WordSaffron (file version ${parsed.version}, this build reads ${EXPORT_VERSION}).`]);
   }
 
   // Rule 3: an import can never set a credential, whatever the file contains.
   if (containsKey(parsed, 'apiKey') || containsKey(parsed, 'api_key')) {
-    warnings.push('The file contained an API key field. It was ignored. WriteRight never imports credentials.');
+    warnings.push('The file contained an API key field. It was ignored. WordSaffron never imports credentials.');
   }
 
   const plan = {};
@@ -194,7 +194,7 @@ export function planImport(text, current = {}) {
     .slice(0, 50);
   if (favourites.length) { plan[STORAGE_KEYS.FAVOURITE_MODELS] = favourites; summary.favouriteModels = favourites.length; }
 
-  if (!Object.keys(plan).length) errors.push('That file contained nothing WriteRight could import.');
+  if (!Object.keys(plan).length) errors.push('That file contained nothing WordSaffron could import.');
 
   return {
     ok: errors.length === 0,

@@ -16,7 +16,7 @@ export function publicModes(modes = []) {
     name: mode.name,
     summary: mode.summary || '',
     description: mode.description || '',
-    colour: mode.colour || '#12AD89',
+    colour: mode.colour || '#9C412B',
     operation: mode.operation || OPERATION.REWRITE,
     researchPolicy: mode.researchPolicy || 'off',
     controls: mode.controls || {},
@@ -129,7 +129,7 @@ export function researchAvailability({ favourites = [], modelId = '', provider =
     return {
       allowed: false,
       known: false,
-      reason: 'WriteRight has not confirmed that this model can search the web. Refresh the model catalogue in settings, then try again.'
+      reason: 'WordSaffron has not confirmed that this model can search the web. Refresh the model catalogue in settings, then try again.'
     };
   }
   if (match.available === false) {
@@ -150,7 +150,7 @@ export function researchAvailability({ favourites = [], modelId = '', provider =
   return {
     allowed: false,
     known: false,
-    reason: 'WriteRight has not confirmed that this model can search the web. Refresh the model catalogue in settings, then try again.'
+    reason: 'WordSaffron has not confirmed that this model can search the web. Refresh the model catalogue in settings, then try again.'
   };
 }
 
@@ -164,7 +164,7 @@ export function renderProofreadBody({ error, text, issues = [], canUndo = false 
     return statusBlock('error', 'We couldn’t check your writing', error, 'Open settings', 'settings');
   }
   if (!String(text || '').trim()) {
-    return statusBlock('idle', 'Start writing', 'WriteRight checks spelling and grammar after you pause, and rewrite modes wait until you pick one.');
+    return statusBlock('idle', 'Start writing', 'WordSaffron checks spelling and grammar after you pause, and rewrite modes wait until you pick one.');
   }
   if (!issues.length) {
     return statusBlock('ok', 'No issues found', 'Nothing to correct in this text. Review it yourself before sending.');
@@ -360,15 +360,15 @@ export function popupCopy({ provider = 'openrouter', hasKey, shutdown = {} }) {
     return { title: 'Finish your setup', detail: `Add a ${getProvider(provider).name} key to get started.`, icon: '!', paused: false };
   }
   if (shutdown.global) {
-    return { title: 'WriteRight is off', detail: 'Switched off everywhere. Nothing leaves this browser.', icon: 'Ⅱ', paused: true };
+    return { title: 'WordSaffron is off', detail: 'Switched off everywhere. Nothing leaves this browser.', icon: 'Ⅱ', paused: true };
   }
   if (shutdown.website) {
-    return { title: 'Off on this site', detail: shutdown.reason || 'WriteRight is switched off for this website.', icon: 'Ⅱ', paused: true };
+    return { title: 'Off on this site', detail: shutdown.reason || 'WordSaffron is switched off for this website.', icon: 'Ⅱ', paused: true };
   }
   if (shutdown.tab) {
     return { title: 'Off in this tab', detail: 'Other tabs keep working.', icon: 'Ⅱ', paused: true };
   }
-  return { title: 'Ready to rewrite', detail: 'Pick a mode from the green W, or let proofreading run as you type.', icon: '✓', paused: false };
+  return { title: 'Ready to rewrite', detail: 'Pick a mode from the WordSaffron button, or let proofreading run as you type.', icon: '✓', paused: false };
 }
 
 export function applyRewriteAllowed(result, acknowledged = false) {

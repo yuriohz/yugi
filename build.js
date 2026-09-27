@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Deterministic runtime build for the WriteRight Chrome extension.
+ * Deterministic runtime build for the WordSaffron Chrome extension.
  *
  * Produces `dist/` containing runtime files only. No sources maps, no tests,
  * no dev dependencies, no remotely hosted code.

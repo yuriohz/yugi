@@ -1,4 +1,9 @@
-# WriteRight — 16-run production execution plan
+# WordSaffron — 16-run production execution plan
+
+> **Rename note (27 September 2026):** this plan was written and executed under the
+> working name WriteRight. The approved public name is now **WordSaffron**. The body
+> below is preserved as the historical record of what was built; it still says
+> WriteRight where the working name was used at the time.
 
 **Status:** canonical scope and completion definition for the v2 production build.
 **Recreated:** 26 September 2026, after the local commits `e6f74c3` (*feat: implement anti-slop multilingual rewriting suite*) and `9cbe8b3` (*docs: add 16-run production execution plan*) were found to be absent from the `yuriohz/yugi` remote, absent from `master` (`bb404ce`), and unrecoverable from the reflog, stash, or any pull request. The plan below is reconstructed from `PRODUCT_PLAN_V2.md`, `DEBRIEF_FOR_OPUS.md`, `DESIGN_SYSTEM.md`, `README.md`, and the retained `design-v2/` artefacts.

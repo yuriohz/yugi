@@ -3,15 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <title>WriteRight settings</title>
+  <title>WordSaffron settings</title>
   <link rel="stylesheet" href="options.css">
 </head>
 <body>
   <main>
     <div class="brand">
-      <span>W</span>
+      <img class="brand-mark" src="icons/icon48.png" alt="" aria-hidden="true">
       <div>
-        <h1>WriteRight</h1>
+        <h1>WordSaffron</h1>
         <p>Rewrite, review and proofread — under your control.</p>
       </div>
     </div>
@@ -29,7 +29,7 @@
 
     <section id="connection">
       <h2>AI connection</h2>
-      <p class="hint">Your key stays in Chrome’s local extension storage and is sent only to the endpoint you configure. WriteRight has no server of its own.</p>
+      <p class="hint">Your key stays in Chrome’s local extension storage and is sent only to the endpoint you configure. WordSaffron has no server of its own.</p>
       <label>Provider <select id="provider"><option value="openrouter">OpenRouter</option><option value="google">Google AI Studio</option></select></label>
       <p class="hint" id="researchNote"></p>
       <label>Endpoint (optional; blank uses provider default) <input id="endpoint" type="url" placeholder="https://openrouter.ai/api/v1/chat/completions"></label>
@@ -91,7 +91,7 @@
       </label>
       <label>Voice <textarea id="profileVoice" rows="3" placeholder="Short sentences, no slang, British spelling."></textarea></label>
       <label>Voice samples (one per paragraph) <textarea id="profileSamples" rows="4" placeholder="Paste a few messages you actually sent."></textarea></label>
-      <label>Protected terms (comma separated) <input id="profileProtected" placeholder="WriteRight, OpenRouter, Abu Dhabi"></label>
+      <label>Protected terms (comma separated) <input id="profileProtected" placeholder="WordSaffron, OpenRouter, Abu Dhabi"></label>
       <div class="actions">
         <span id="profileStatus"></span>
         <button type="button" class="ghost" id="newProfile">New profile</button>
@@ -102,7 +102,7 @@
 
     <section id="modes">
       <h2>Custom modes</h2>
-      <p class="hint">A custom mode can shape style. It cannot relax safety, invent facts, or ask WriteRight to be undetectable.</p>
+      <p class="hint">A custom mode can shape style. It cannot relax safety, invent facts, or ask WordSaffron to be undetectable.</p>
       <ul id="modeList" class="list"></ul>
       <div class="row">
         <label>Name <input id="modeName" placeholder="Blunt Slack"></label>
@@ -136,9 +136,9 @@
 
     <section id="dictionary">
       <h2>Personal dictionary</h2>
-      <p class="hint">Words WriteRight should stop correcting. Scoped globally unless you say otherwise.</p>
+      <p class="hint">Words WordSaffron should stop correcting. Scoped globally unless you say otherwise.</p>
       <div class="row">
-        <label>Word <input id="dictWord" placeholder="WriteRight"></label>
+        <label>Word <input id="dictWord" placeholder="WordSaffron"></label>
         <label>Note <input id="dictNote" placeholder="Product name"></label>
       </div>
       <div class="actions">
@@ -151,7 +151,7 @@
     <section id="privacy">
       <h2>Privacy controls</h2>
       <label class="toggle">
-        <div><strong>WriteRight is on</strong><small>When this is off, the extension makes no network requests</small></div>
+        <div><strong>WordSaffron is on</strong><small>When this is off, the extension makes no network requests</small></div>
         <input id="enabled" type="checkbox"><i></i>
       </label>
       <label class="toggle">

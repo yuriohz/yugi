@@ -5,7 +5,7 @@
 export function ask(type, extra = {}) {
   return new Promise((resolve, reject) => {
     if (typeof chrome === 'undefined' || !chrome.runtime?.sendMessage) {
-      reject(new Error('WriteRight is not running as an extension.'));
+      reject(new Error('WordSaffron is not running as an extension.'));
       return;
     }
     chrome.runtime.sendMessage({ type, ...extra }, response => {

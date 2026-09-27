@@ -134,7 +134,7 @@ test('changed site markup produces no context rather than the wrong context', ()
 test('context is off by default, even on a supported site', () => {
   const capture = captureContext(whatsappPage(), { host: 'web.whatsapp.com', settings: defaultSettings(), consented: true });
   assert.equal(capture.allowed, false);
-  assert.match(capture.reason, /switched off in WriteRight settings/);
+  assert.match(capture.reason, /switched off in WordSaffron settings/);
   assert.deepEqual(capture.blocks, []);
 });
 

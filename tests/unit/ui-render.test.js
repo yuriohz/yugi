@@ -250,7 +250,7 @@ test('insights explain tone with quoted evidence and hedge reader reactions', ()
 
 test('popup copy tells the truth about setup and shutdown', () => {
   assert.equal(popupCopy({ hasKey: false }).title, 'Finish your setup');
-  assert.equal(popupCopy({ hasKey: true, shutdown: { global: true } }).title, 'WriteRight is off');
+  assert.equal(popupCopy({ hasKey: true, shutdown: { global: true } }).title, 'WordSaffron is off');
   assert.equal(popupCopy({ hasKey: true, shutdown: { website: true, reason: 'Off for https://example.com' } }).detail, 'Off for https://example.com');
   assert.match(popupCopy({ hasKey: true, shutdown: {} }).title, /Ready to rewrite/);
 });

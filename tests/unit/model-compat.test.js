@@ -102,7 +102,7 @@ test('capabilities lookup returns null for an unknown model', async () => {
   assert.ok(await getModelCapabilities('a/b', { fetchImpl, area }));
 });
 
-test('the cached entry is trimmed to the fields WriteRight uses', async () => {
+test('the cached entry is trimmed to the fields WordSaffron uses', async () => {
   const area = new MemoryStorageArea();
   const fetchImpl = fakeFetch([jsonResponse({ data: [{ id: 'a/b', description: 'x'.repeat(10_000), supported_parameters: [] }] })]);
   const { models } = await getCatalogue({ fetchImpl, area });

@@ -20,7 +20,7 @@ test('OpenRouter attribution headers are sent', async () => {
   await chatCompletion({ settings, body, fetchImpl });
   const headers = fetchImpl.calls[0].init.headers;
   assert.equal(headers.Authorization, 'Bearer test-key-value');
-  assert.equal(headers['X-Title'], 'WriteRight Chrome Extension');
+  assert.equal(headers['X-Title'], 'WordSaffron Chrome Extension');
   assert.ok(headers['HTTP-Referer']);
 });
 

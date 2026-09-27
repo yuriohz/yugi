@@ -69,9 +69,9 @@ export async function describeCapture(host, { area, settings } = {}) {
     supportsContext: typeof adapter.nearbyContext === 'function' && adapter.id !== 'generic' && adapter.id !== 'notion',
     maxMessages: Math.min(Number(resolved?.context?.maxMessages) || 6, LIMITS.MAX_CONTEXT_MESSAGES),
     reason: !globallyEnabled
-      ? 'Nearby conversation context is switched off in WriteRight settings.'
+      ? 'Nearby conversation context is switched off in WordSaffron settings.'
       : !consented
-        ? `WriteRight has not been allowed to read the conversation on ${normaliseHost(host)}.`
+        ? `WordSaffron has not been allowed to read the conversation on ${normaliseHost(host)}.`
         : ''
   };
 }
@@ -92,8 +92,8 @@ export function captureContext(element, { host, adapter, settings, consented, ex
     return {
       allowed: false,
       reason: !globallyEnabled
-        ? 'Nearby conversation context is switched off in WriteRight settings.'
-        : `WriteRight has not been allowed to read the conversation on ${normaliseHost(host)}.`,
+        ? 'Nearby conversation context is switched off in WordSaffron settings.'
+        : `WordSaffron has not been allowed to read the conversation on ${normaliseHost(host)}.`,
       messages: [], preview: '', blocks: [], redactions: 0, adapterName: resolved.name
     };
   }
@@ -105,7 +105,7 @@ export function captureContext(element, { host, adapter, settings, consented, ex
   } catch {
     // A site changed its markup. Send nothing rather than something wrong.
     return {
-      allowed: true, reason: 'WriteRight could not read the conversation on this page, so none was included.',
+      allowed: true, reason: 'WordSaffron could not read the conversation on this page, so none was included.',
       messages: [], preview: '', blocks: [], redactions: 0, adapterName: resolved.name
     };
   }

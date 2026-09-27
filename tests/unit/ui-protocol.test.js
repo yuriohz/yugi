@@ -92,5 +92,5 @@ test('the popup has one settings action and honest toggle copy', async () => {
   const html = await readFile(path.join(ROOT, 'src/ui/popup.html'), 'utf8');
   assert.ok(!html.includes('id="options"'), 'the duplicate options button is gone');
   assert.match(html, /id="settings"/);
-  assert.ok(!html.includes('Allow WriteRight on'), 'the consent-sounding toggle label is gone');
+  assert.ok(!html.includes('Allow WordSaffron on'), 'the consent-sounding toggle label is gone');
 });

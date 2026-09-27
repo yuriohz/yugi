@@ -118,7 +118,7 @@ export function describeHistory(settings, entries = []) {
     return {
       enabled: false,
       summary: 'History is off. Nothing you write is being stored.',
-      detail: 'When history is on, WriteRight keeps your recent rewrites on this device only, so you can recover one you dismissed.'
+      detail: 'When history is on, WordSaffron keeps your recent rewrites on this device only, so you can recover one you dismissed.'
     };
   }
   const days = Math.round((config.ttlMs || LIMITS.HISTORY_TTL_MS) / 86_400_000);

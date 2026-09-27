@@ -2,7 +2,7 @@
  * A scripted fetch replacement plus a call spy.
  *
  * Used to assert the request lifecycle, the retry policy, and — critically —
- * the zero-call guarantee when WriteRight is switched off.
+ * the zero-call guarantee when WordSaffron is switched off.
  */
 
 export function jsonResponse(body, { status = 200 } = {}) {

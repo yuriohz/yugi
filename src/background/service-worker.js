@@ -1,11 +1,11 @@
 import { getProvider, isKnownProvider } from '../core/providers.js';
 /**
- * WriteRight Manifest V3 service worker.
+ * WordSaffron Manifest V3 service worker.
  *
  * Responsibilities: own the API key, own every network call, route tasks, and
  * enforce the shutdown gate before anything leaves the browser.
  *
- * The zero-call guarantee: while WriteRight is switched off — globally, for a
+ * The zero-call guarantee: while WordSaffron is switched off — globally, for a
  * site, or for a tab — it makes no network request of any kind. The only
  * exceptions are requests the user explicitly triggers from the settings page
  * (testing a key, refreshing the model list), which are marked `userInitiated`

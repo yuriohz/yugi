@@ -7,7 +7,7 @@ wires them at runtime — content-script logic → message channel → backgroun
 prompt composition → transport → validation → guardrails → apply — and drive them
 through complete user journeys with a scripted transport.
 
-Everything except the browser itself is the real code. There are no mocks of WriteRight's
+Everything except the browser itself is the real code. There are no mocks of WordSaffron's
 own logic.
 
 ## What these are **not**

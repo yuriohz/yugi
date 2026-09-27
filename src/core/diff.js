@@ -121,7 +121,7 @@ export function summariseDiff(ops) {
 /**
  * Undo support.
  *
- * WriteRight restores the exact previous string and the exact previous caret
+ * WordSaffron restores the exact previous string and the exact previous caret
  * position, rather than relying on the page's own undo stack, which many
  * editors clear when a value is set programmatically.
  */

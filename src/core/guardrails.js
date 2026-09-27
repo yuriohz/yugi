@@ -123,7 +123,7 @@ export function enforceGuardrails({
     violations.push({
       guardrail: 'prohibitedAssurance',
       severity: 'error',
-      message: `The response contains a claim WriteRight does not make: “${claim}”.`,
+      message: `The response contains a claim WordSaffron does not make: “${claim}”.`,
       blocking: true
     });
   }
