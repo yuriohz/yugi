@@ -1,6 +1,6 @@
 import { getProvider } from '../core/providers.js';
 /**
- * WriteRight content script entry point.
+ * WordSaffron content script entry point.
  *
  * Owns no credentials and makes no network calls. Everything that touches the
  * network goes through the service worker, which enforces the shutdown gate.
@@ -123,7 +123,7 @@ function start() {
     try {
       state.snapshot = await ask(MESSAGES.GET_STATE, { origin: location.origin });
     } catch {
-      state.snapshot = state.snapshot || { hasKey: false, shutdown: { allowed: false, reason: 'WriteRight is not reachable.' }, modes: [], profiles: [], favourites: [], dictionary: [], consents: {} };
+      state.snapshot = state.snapshot || { hasKey: false, shutdown: { allowed: false, reason: 'WordSaffron is not reachable.' }, modes: [], profiles: [], favourites: [], dictionary: [], consents: {} };
     }
     fillSelects();
   }
@@ -269,10 +269,10 @@ function start() {
   function bodyHtml() {
     const snap = state.snapshot || {};
     if (snap.hasKey === false) {
-      return statusBlock('error', 'Finish your setup', `Add a ${getProvider(snap.settings?.provider).name} API key in settings. WriteRight has no account of its own.`, 'Open settings', 'settings');
+      return statusBlock('error', 'Finish your setup', `Add a ${getProvider(snap.settings?.provider).name} API key in settings. WordSaffron has no account of its own.`, 'Open settings', 'settings');
     }
     if (snap.shutdown && snap.shutdown.allowed === false) {
-      return statusBlock('idle', 'WriteRight is paused', snap.shutdown.reason || 'Nothing leaves this browser while WriteRight is off.', 'Resume', 'resume');
+      return statusBlock('idle', 'WordSaffron is paused', snap.shutdown.reason || 'Nothing leaves this browser while WordSaffron is off.', 'Resume', 'resume');
     }
     if (state.running) {
       return statusBlock('idle', 'Working', 'The model is rewriting or reviewing. You can cancel from the badge.');
@@ -673,10 +673,11 @@ function start() {
 }
 
 function shell() {
-  return `<button class="wr-badge" aria-label="Open WriteRight" title="Open WriteRight"><span>W</span><b hidden>0</b></button>
-    <section class="wr-panel" role="dialog" aria-label="WriteRight" hidden>
+  const mark = '<svg viewBox="0 0 512 512" aria-hidden="true" focusable="false"><path fill="#A7472D" d="M256 52c-111 0-199 72-199 166 0 78 57 138 144 155l-14 65 84-60c103-7 184-78 184-168 0-88-88-158-199-158Z"/><path fill="#F0C764" d="M239 292c-32-7-60-37-62-77 38 6 72 33 85 62 7 15-7 23-23 15Z"/><path fill="#F0C764" d="M278 284c5-37 28-71 65-88 6 39-10 72-39 93-13 9-28 7-26-5Z"/><path fill="#F0C764" d="M245 303c10 7 25 11 40 6-4 17-16 31-33 40-9-13-12-30-7-46Z"/></svg>';
+  return `<button class="wr-badge" aria-label="Open WordSaffron" title="Open WordSaffron">${mark}<b hidden>0</b></button>
+    <section class="wr-panel" role="dialog" aria-label="WordSaffron" hidden>
       <header>
-        <div class="wr-headline"><div class="wr-brand"><span class="wr-logo">W</span><div class="wr-brand-copy"><strong>WriteRight</strong><small>Your writing assistant</small></div></div><button class="wr-close" aria-label="Close">×</button></div>
+        <div class="wr-headline"><div class="wr-brand"><span class="wr-logo">${mark}</span><div class="wr-brand-copy"><strong>WordSaffron</strong><small>A pinch of clarity. Still your words.</small></div></div><button class="wr-close" aria-label="Close">×</button></div>
         <div class="wr-toolbar">
           <label>Profile <select data-profile></select></label>
           <label>Model <select data-model></select></label>

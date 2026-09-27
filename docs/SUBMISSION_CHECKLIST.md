@@ -18,7 +18,7 @@ These run in CI and in `npm run verify`. Re-run them on the exact commit you sub
 | 1.2 | No prohibited assurance claims in any shipped file | included in lint | ✅ clean |
 | 1.3 | No credentials anywhere in the tree | `npm run scan:secrets` | ✅ clean |
 | 1.4 | Deterministic build; manifest references resolve | `npm run build` | ✅ 17 files |
-| 1.5 | Unit tests | `npm test` | ✅ 492 assertions |
+| 1.5 | Unit tests | `npm test` | ✅ 522 assertions |
 | 1.6 | Integration journeys | `npm run test:browser` | ✅ 16 journeys |
 | 1.7 | Package contains only allow-listed runtime files | `npm run package` | ✅ 18 entries |
 | 1.8 | No remote code: no remote `<script src>`, no URL `import()`, no `importScripts` from a URL, no `eval`, no `new Function` | enforced in `tools/package.js` | ✅ refused if found |
@@ -58,12 +58,12 @@ Nothing below can be ticked from this build process. Work through
 
 | # | Item | Why it is yours | Status |
 |---|---|---|---|
-| 4.1 | Final public name chosen | Brand decision. `NAMING_RESEARCH.md` gives an evidence-backed shortlist of three | ☐ |
-| 4.2 | Trademark clearance obtained for that name | A legal opinion. No register could be queried from this environment | ☐ |
-| 4.3 | Domain purchased | Costs money. Candidates and their RDAP status are in `NAMING_RESEARCH.md` §6 | ☐ |
+| 4.1 | Final public name chosen | ✅ **WordSaffron**, approved 27 September 2026. See `NAMING_RESEARCH.md` §14 and the staged-rollout record | ✅ |
+| 4.2 | Trademark clearance obtained for that name | A legal opinion. No register could be queried from this environment; **no trademark search has been performed** | ☐ |
+| 4.3 | Domain purchased | Costs money. `wordsaffron.com` showed “Add to cart” on Namecheap on 27 September 2026 — a point-in-time signal only, not a reservation | ☐ |
 | 4.4 | Social handles registered | Requires accounts | ☐ |
-| 4.5 | Manifest `name`, `homepage_url` and store listing updated to the final name | Follows 4.1 | ☐ |
-| 4.6 | Icons and promo art redrawn for the final name | Follows 4.1 | ☐ |
+| 4.5 | Manifest `name`, `homepage_url` and store listing updated to the final name | ✅ Manifest and listing use WordSaffron (Stages 2–3, 27 September 2026) | ✅ |
+| 4.6 | Icons and promo art redrawn for the final name | ✅ Runtime icons match the approved mark; promo tiles redrawn as labelled mockups. Runtime screenshots still to capture (§3.8) | ✅ |
 
 ## 5. Blocked — requires a publisher account
 
@@ -85,8 +85,8 @@ Answer exactly this. These statements are backed by the code and by tests.
 |---|---|---|
 | Does it collect personally identifiable information? | **No** | No backend exists |
 | Health information? | **No** | — |
-| Financial and payment information? | **No** | The user's own OpenRouter key is stored locally and sent only to OpenRouter |
-| Authentication information? | **Yes — stored locally, not collected** | The OpenRouter API key is held in `chrome.storage.local` and never sent anywhere except OpenRouter's API in the `Authorization` header |
+| Financial and payment information? | **No** | The user's own provider key is stored locally and sent only to the selected provider |
+| Authentication information? | **Yes — stored locally, not collected** | The provider API key (OpenRouter or Google AI Studio) is held in `chrome.storage.local` and sent only to the configured endpoint in the `Authorization` header |
 | Personal communications? | **Yes — transmitted to the user's chosen model, not collected** | Text the user selects is sent to the model. Nearby conversation only with two explicit opt-ins |
 | Location? | **No** | — |
 | Web history? | **No** | — |
@@ -101,9 +101,9 @@ Required certifications:
 
 ## 7. Single-purpose statement
 
-> WriteRight helps you improve text you are writing in any web text field: it proofreads,
+> WordSaffron helps you improve text you are writing in any web text field: it proofreads,
 > rewrites in a mode you choose, and reviews the reasoning in what you wrote. Every
-> capability serves that one purpose. It uses your own OpenRouter API key, has no backend,
+> capability serves that one purpose. It uses your own provider API key, has no backend,
 > and collects no analytics.
 
 ## 8. Final gate before you click Submit
@@ -115,7 +115,7 @@ Required certifications:
 - ☐ Screenshots are real runtime captures, not mockups
 - ☐ Store listing text matches what the build actually does
 - ☐ No claim of undetectability, guaranteed human output, or guaranteed correctness anywhere in the listing
-- ☐ Name conflicts resolved
+- ☐ Working-name conflicts resolved (WordSaffron approved); trademark clearance still open
 
 | Field | Value |
 |---|---|
@@ -129,6 +129,7 @@ Required certifications:
 
 ## Statement of record
 
-As of the last commit in this repository, items 3, 4 and 5 are **not complete**. This
+As of the last commit in this repository, items 3 and 5 are **not complete**, and item
+4 is part-complete (name chosen and applied; trademark, domain and handles open). This
 extension has **not** been submitted to the Chrome Web Store. Any statement to the
 contrary would be false.

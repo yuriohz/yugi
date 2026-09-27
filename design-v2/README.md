@@ -1,4 +1,8 @@
-# WriteRight v2 design review
+# WordSaffron v2 design review
+
+> Rebranded to WordSaffron/Tactile on 27 September 2026 (Stage 4). These remain
+> **design mockups**, not runtime screenshots. See `store-assets/README.md` for
+> the store-image provenance rules.
 
 These screens are high-fidelity product design mockups for the proposed v2 experience. They are provided for approval before runtime implementation begins. They do not claim that the current extension already has these features.
 

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="360" viewBox="0 0 1500 360" role="img" aria-labelledby="title desc">
+  <title id="title">WordSaffron</title>
+  <desc id="desc">WordSaffron wordmark beside a terracotta speech bubble with saffron petals.</desc>
+  <g transform="translate(20 10) scale(.64)">
+    <path fill="#A7472D" d="M256 52c-111 0-199 72-199 166 0 78 57 138 144 155l-14 65 84-60c103-7 184-78 184-168 0-88-88-158-199-158Z"/>
+    <path fill="#F0C764" d="M239 292c-32-7-60-37-62-77 38 6 72 33 85 62 7 15-7 23-23 15Z"/>
+    <path fill="#F0C764" d="M278 284c5-37 28-71 65-88 6 39-10 72-39 93-13 9-28 7-26-5Z"/>
+    <path fill="#F0C764" d="M245 303c10 7 25 11 40 6-4 17-16 31-33 40-9-13-12-30-7-46Z"/>
+  </g>
+  <text x="360" y="236" fill="#35251F" font-family="Georgia, 'Times New Roman', serif" font-size="142" font-weight="700" letter-spacing="-4">WordSaffron</text>
+</svg>

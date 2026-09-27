@@ -71,19 +71,19 @@ export async function isAllowed({ origin, tabId } = {}, deps = {}) {
   const settings = deps.settings || await getSettings(area);
 
   if (settings.enabled === false) {
-    return { allowed: false, blockedBy: SCOPES.GLOBAL, reason: 'WriteRight is switched off everywhere.' };
+    return { allowed: false, blockedBy: SCOPES.GLOBAL, reason: 'WordSaffron is switched off everywhere.' };
   }
 
   const normalised = normaliseOrigin(origin);
   if (normalised) {
     const sites = deps.siteShutdowns || await getSiteShutdowns(area);
     if (sites.includes(normalised)) {
-      return { allowed: false, blockedBy: SCOPES.WEBSITE, reason: `WriteRight is switched off for ${normalised}.` };
+      return { allowed: false, blockedBy: SCOPES.WEBSITE, reason: `WordSaffron is switched off for ${normalised}.` };
     }
   }
 
   if (isTabShutdown(tabId)) {
-    return { allowed: false, blockedBy: SCOPES.TAB, reason: 'WriteRight is switched off for this tab.' };
+    return { allowed: false, blockedBy: SCOPES.TAB, reason: 'WordSaffron is switched off for this tab.' };
   }
 
   return { allowed: true, blockedBy: null, reason: '' };

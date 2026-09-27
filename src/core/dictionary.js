@@ -1,7 +1,7 @@
 /**
  * Personal dictionary.
  *
- * Words the user has told WriteRight to stop correcting. Entries are scoped so
+ * Words the user has told WordSaffron to stop correcting. Entries are scoped so
  * a name that is fine at work is not silently accepted everywhere.
  */
 

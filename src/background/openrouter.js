@@ -63,7 +63,7 @@ export async function chatCompletion({
   random = Math.random
 }) {
   if (!settings?.apiKey) {
-    throw new ApiError(`Add your ${getProvider(settings?.provider).name} API key in WriteRight settings.`, { code: 'no_key' });
+    throw new ApiError(`Add your ${getProvider(settings?.provider).name} API key in WordSaffron settings.`, { code: 'no_key' });
   }
   const doFetch = fetchImpl || globalThis.fetch;
   const provider = getProvider(settings.provider);

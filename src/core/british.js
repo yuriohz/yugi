@@ -1,7 +1,7 @@
 /**
  * British English conventions.
  *
- * WriteRight defaults to British spelling and punctuation. This module detects
+ * WordSaffron defaults to British spelling and punctuation. This module detects
  * Americanisms deterministically so the UI can show them as ordinary issues,
  * with exact offsets, without spending a model call.
  *

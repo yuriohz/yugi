@@ -6,11 +6,11 @@
  * COMMIT:       000650b156983f5159695b441477f4e63b25dc85
  * SOURCE FILE:  skills/no-ai-slop/SKILL.md ("Words to cut", "Patterns to cut")
  *
- * The upstream project states these rules as editor guidance in prose. WriteRight
+ * The upstream project states these rules as editor guidance in prose. WordSaffron
  * restates them as typed records so they can be detected locally without a model
  * call, explained to the user, and verified after a rewrite.
  *
- * Arabic rules in ARABIC_SLOP_RULES are WriteRight's own work and are not part of
+ * Arabic rules in ARABIC_SLOP_RULES are WordSaffron's own work and are not part of
  * the upstream project.
  */
 
@@ -281,7 +281,7 @@ export const SLOP_RULES = Object.freeze([
 ]);
 
 /**
- * Arabic-specific slop patterns. WriteRight original work, built on the same
+ * Arabic-specific slop patterns. WordSaffron original work, built on the same
  * taxonomy: inflated register, empty connectives, and ceremonial padding that
  * machine translation and LLMs add to Arabic prose.
  */

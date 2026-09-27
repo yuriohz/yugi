@@ -3,7 +3,7 @@
  *
  * Chrome's CSS Custom Highlight API draws over precise ranges without touching
  * the page's DOM, which is the only safe option inside someone else's editor.
- * Where it is unavailable, WriteRight falls back to an overlay for textareas
+ * Where it is unavailable, WordSaffron falls back to an overlay for textareas
  * and inputs, and to no underline at all for contenteditable — because a wrong
  * underline is worse than none.
  */

@@ -1,9 +1,12 @@
 # Privacy policy
 
-**Last updated: 26 September 2026 · applies to version 2.0.0**
+**Last updated: 27 September 2026 · applies to version 2.0.0**
 
-WriteRight is a browser extension that improves text you are writing. It uses **your own**
-OpenRouter or Google AI Studio API key. There is no WriteRight server, no WriteRight account, and no analytics.
+*Rebrand note: this policy was updated to the approved WordSaffron name on
+27 September 2026. No data-handling behaviour changed.*
+
+WordSaffron is a browser extension that improves text you are writing. It uses **your own**
+OpenRouter or Google AI Studio API key. There is no WordSaffron server, no WordSaffron account, and no analytics.
 
 ---
 
@@ -11,13 +14,13 @@ OpenRouter or Google AI Studio API key. There is no WriteRight server, no WriteR
 
 | Question | Answer |
 |---|---|
-| Is there a WriteRight backend? | **No.** There is nowhere for us to send your data, because there is no "us" in the data path |
-| Does WriteRight collect analytics or telemetry? | **No.** None, of any kind |
+| Is there a WordSaffron backend? | **No.** There is nowhere for us to send your data, because there is no "us" in the data path |
+| Does WordSaffron collect analytics or telemetry? | **No.** None, of any kind |
 | Where does your API key live? | `chrome.storage.local` on this device. It is **never** synced to Google |
-| What leaves your browser? | Only text you explicitly ask WriteRight to work on, sent to the model you chose, using your key |
+| What leaves your browser? | Only text you explicitly ask WordSaffron to work on, sent to the model you chose, using your key |
 | Does it read pages you are not typing in? | **No** |
 | Does it read your conversations? | Only if you switch nearby context on **and** allow it for that specific site. Both are off by default |
-| Can you stop it completely? | Yes. Three switches — global, per-site, per-tab. While any applies, WriteRight makes **no network request at all** |
+| Can you stop it completely? | Yes. Three switches — global, per-site, per-tab. While any applies, WordSaffron makes **no network request at all** |
 
 ---
 
@@ -29,7 +32,7 @@ When you trigger a check, a rewrite, or a review, the text in the field — or t
 you selected — is sent over HTTPS to the endpoint you configured, which is
 `https://openrouter.ai/api/v1/chat/completions` by default.
 
-WriteRight does not send anything on page load, on navigation, or in the background. A
+WordSaffron does not send anything on page load, on navigation, or in the background. A
 request is made only in response to something you did.
 
 **Password fields are never read.** The content script attaches only to text inputs,
@@ -37,13 +40,13 @@ search, email and URL inputs, textareas, and contenteditable regions.
 
 ### Nearby conversation context — opt-in twice
 
-On WhatsApp Web, Gmail, LinkedIn and Slack, WriteRight can include the surrounding
+On WhatsApp Web, Gmail, LinkedIn and Slack, WordSaffron can include the surrounding
 conversation so a reply fits the thread. This is off by default and needs **both**:
 
 1. the global "nearby context" preference switched on, and
 2. explicit consent for that specific website.
 
-Before anything is sent, WriteRight shows you the exact messages it would include, tells
+Before anything is sent, WordSaffron shows you the exact messages it would include, tells
 you how many and from which site, and lets you remove any of them. Anything that looks
 like a credential is redacted first, and the count of redactions is shown. Notion reads
 no surrounding blocks at all, because a page is a document and neighbouring blocks are
@@ -54,12 +57,12 @@ usually unrelated notes.
 Stored in `chrome.storage.local`. It is sent to your configured endpoint in the
 `Authorization` header so the provider can authenticate the request. It goes nowhere else.
 
-WriteRight deliberately does **not** use `chrome.storage.sync`, because that would copy
+WordSaffron deliberately does **not** use `chrome.storage.sync`, because that would copy
 your key to Google's servers.
 
 ### Local history — off by default
 
-If you switch it on, WriteRight keeps recent rewrites on this device so you can recover
+If you switch it on, WordSaffron keeps recent rewrites on this device so you can recover
 one you dismissed. When it is on:
 
 - it stores the **site origin**, never the full URL, so a document title or a thread id in
@@ -80,7 +83,7 @@ Switching history off deletes what was already stored.
 
 - Analytics, telemetry, usage statistics, crash reports
 - Your browsing history, tab list, page titles or URLs of pages you are not typing in
-- Your clipboard. Copy is a one-way write; WriteRight never reads the clipboard
+- Your clipboard. Copy is a one-way write; WordSaffron never reads the clipboard
 - Cookies
 - Any personal identifier. There is no account and no identifier assigned to you
 
@@ -103,11 +106,11 @@ on your behalf using its `openrouter:web_search` server tool, which involves a s
 provider. This never runs unless you switch research on for that specific run, and the
 cost and the tool are disclosed to you before it runs.
 
-If you point WriteRight at a different endpoint, that operator's policies apply instead.
+If you point WordSaffron at a different endpoint, that operator's policies apply instead.
 
 ### Nobody else
 
-WriteRight contacts no other service. It loads no remote script, no font, no tracking
+WordSaffron contacts no other service. It loads no remote script, no font, no tracking
 pixel and no analytics SDK. This is enforced at build time: the packaging step refuses to
 produce an archive containing remotely hosted executable code.
 
@@ -132,12 +135,12 @@ produce an archive containing remotely hosted executable code.
 |---|---|
 | Turn off for this tab | Nothing is sent from this tab for the rest of the session |
 | Turn off for this website | Nothing is sent from that site until you turn it back on |
-| Turn off everywhere | WriteRight makes no network request at all |
+| Turn off everywhere | WordSaffron makes no network request at all |
 | Revoke site context consent | That site's conversation is no longer read |
 | Clear history | Deletes every stored entry immediately |
 | Remove the extension | Deletes all local data, including your key |
 
-The only requests possible while WriteRight is switched off are ones you trigger yourself
+The only requests possible while WordSaffron is switched off are ones you trigger yourself
 from the settings page — testing your API key, or refreshing the model list. Those are
 you asking for a call.
 
@@ -145,7 +148,7 @@ you asking for a call.
 
 ## Children
 
-WriteRight is not directed at children under 13 and collects no information from anyone.
+WordSaffron is not directed at children under 13 and collects no information from anyone.
 
 ---
 

@@ -12,7 +12,7 @@
  *     paragraph. Without isolation, the Unicode bidi algorithm reorders the
  *     characters around it and the user sees a mangled URL.
  *
- * WriteRight isolates rather than rewrites: the stored text is never altered,
+ * WordSaffron isolates rather than rewrites: the stored text is never altered,
  * only its presentation.
  */
 

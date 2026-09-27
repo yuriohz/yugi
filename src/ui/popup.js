@@ -72,7 +72,7 @@ tabBtn.addEventListener('click', () => toggle('tab', tabBtn));
 document.getElementById('settings').addEventListener('click', () => chrome.runtime.openOptionsPage());
 
 load().catch(error => {
-  status.textContent = 'WriteRight could not load';
+  status.textContent = 'WordSaffron could not load';
   detail.textContent = error.message;
   icon.textContent = '!';
 });

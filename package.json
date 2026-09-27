@@ -1,9 +1,9 @@
 {
-  "name": "writeright-extension",
+  "name": "wordsaffron-extension",
   "version": "2.0.0",
   "private": true,
   "type": "module",
-  "description": "WriteRight — anti-slop multilingual rewriting Chrome extension (Manifest V3).",
+  "description": "WordSaffron — English & Arabic writing Chrome extension (Manifest V3).",
   "license": "MIT",
   "scripts": {
     "build": "node build.js",

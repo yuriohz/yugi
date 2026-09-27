@@ -1,10 +1,10 @@
-# WriteRight design system
+# WordSaffron design system
 
-**Version:** 2.0 proposal  
-**Status:** design specification for approval  
-**Updated:** September 26, 2026
+**Version:** 4.0 · Stages 3–4 store/release and repo-wide brand rollout
+**Status:** tactile concept 04 applied across extension UI, runtime icons, store/release copy, store and design mockups, and all live repository docs; Chrome visual acceptance and runtime screenshots remain pending because no Chrome/Chromium binary is available in this environment.
+**Updated:** September 27, 2026
 
-WriteRight's interface should feel calm, precise, and trustworthy. It appears inside other products, so it must be visually distinct without competing with the page. The system favors progressive disclosure, comparison before replacement, explicit AI state, and compact controls that expand only when needed.
+WordSaffron's interface should feel warm, precise, and trustworthy. It appears inside other products, so it must be recognizable without competing with the page. The system favors progressive disclosure, comparison before replacement, explicit AI state, and compact controls that expand only when needed. See [`BRAND_GUIDELINES.md`](BRAND_GUIDELINES.md) for the full identity rules.
 
 ## 1. Product principles
 
@@ -30,38 +30,39 @@ Mode, profile, length, model, and research state are visible before generation. 
 
 ### Human voice over AI spectacle
 
-No magic gradients, sparkle overload, anthropomorphic claims, fake certainty, or “undetectable AI” language. WriteRight communicates as an editor, not a performer.
+No magic gradients, sparkle overload, anthropomorphic claims, fake certainty, or “undetectable AI” language. WordSaffron communicates as an editor, not a performer.
 
 ## 2. Visual direction
 
-The visual language is a restrained 2026 productivity aesthetic:
+The visual language follows the approved **Tactile** direction:
 
-- warm neutral surfaces rather than stark blue-white software chrome;
-- compact cards with subtle borders instead of heavy shadows;
+- creamy paper surfaces, dark cocoa text, restrained terracotta brand controls, saffron-gold logo accents, and soft pistachio support surfaces;
+- compact cards with subtle borders rather than heavy shadows or simulated paper stacks in the live UI;
 - rounded geometry with controlled radii, not pill shapes everywhere;
-- typography-led hierarchy;
-- green reserved for progress, approval, and brand recognition;
-- amber for review and uncertainty, red for definite errors, blue for information;
-- dense desktop layouts that remain touch-safe and readable;
+- editorial serif only for the wordmark or occasional campaign headline; product UI remains a clear system sans;
+- semantic success, warning, error, and information colors remain separate from brand colors;
+- saffron gold is decorative/accent color, not small body text;
+- dense layouts remain touch-safe, readable, and compatible with Arabic RTL;
 - short, functional microcopy;
-- motion used to explain spatial change, never as decoration.
+- motion explains spatial change, never decorates it.
 
 ## 3. Brand foundation
 
 ### Name
 
-Always write **WriteRight** as one word with two capital letters.
+Always write **WordSaffron** as one word with capital W and S.
 
 ### Mark
 
-The primary mark is a white italic serif `W` inside a solid green circle. It must remain legible at 16 px. Do not add gradients, glows, or separate AI badges to the mark.
+The approved mark is a terracotta speech bubble containing three simple saffron petals/quotation shapes, paired with an editorial serif wordmark. The current vector master is in `brand-assets/`. Keep the symbol legible at 16 px; no gradients, glows, AI stars, or detailed botanical illustration.
 
 ### Voice
 
-WriteRight is:
+WordSaffron is:
 
+- warm, not sugary;
+- editorial, not academic or corporate;
 - direct, not blunt;
-- calm, not cheerful by default;
 - specific, not verbose;
 - honest about uncertainty;
 - helpful without praising every input.
@@ -73,44 +74,40 @@ Example:
 
 ## 4. Color tokens
 
-### Brand
+The visual identity uses warm paper, dark cocoa, terracotta, saffron gold, and pistachio. The exact use rules and contrast rationale are documented in [`BRAND_GUIDELINES.md`](BRAND_GUIDELINES.md).
+
+### Brand and neutral
 
 | Token | Hex | Use |
 |---|---:|---|
-| `brand-700` | `#08755F` | pressed controls, dark text accents |
-| `brand-600` | `#0B9377` | labels and accessible links |
-| `brand-500` | `#12AD89` | primary actions |
-| `brand-400` | `#15C39A` | logo and active indicators |
-| `brand-100` | `#DFF6EF` | selected cards and positive backgrounds |
-| `brand-50` | `#EFFBF7` | canvas tint |
-
-### Neutral
-
-| Token | Hex | Use |
-|---|---:|---|
-| `ink-950` | `#172E29` | primary headings |
-| `ink-800` | `#243430` | primary body text |
-| `ink-600` | `#51625E` | secondary text |
-| `ink-500` | `#74817E` | metadata |
-| `line-300` | `#CAD3D0` | strong field border |
-| `line-200` | `#DFE5E2` | card borders and dividers |
-| `surface-100` | `#F3F7F5` | muted controls |
-| `surface-50` | `#FBFCFC` | settings canvas |
-| `white` | `#FFFFFF` | elevated surfaces |
+| `terra-700` | `#7D3424` | pressed state and high-contrast terracotta text |
+| `terra-600` | `#9C412B` | primary action / accessible brand text |
+| `terra-500` | `#A7472D` | logo and prominent accents |
+| `terra-100` | `#F3E2D9` | selected brand surface |
+| `saffron-500` | `#D99A21` | logo petals and decorative accents; not small text |
+| `saffron-700` | `#805200` | accessible saffron text on light surfaces |
+| `pistachio-100` | `#E8EFDC` | calm selected/positive surface |
+| `pistachio-600` | `#56704C` | accessible supporting text/icons |
+| `cocoa-950` | `#35251F` | primary text, wordmark, primary dark control |
+| `cocoa-700` | `#493A33` | secondary headings and labels |
+| `cocoa-600` | `#6B5E56` | supporting text |
+| `paper-50` | `#FBF5E9` | warm page canvas |
+| `white` | `#FFFCF7` | raised card and input surfaces |
+| `line-300` | `#D8CABB` | strong field border |
+| `line-200` | `#E9E0D4` | card borders and dividers |
 
 ### Semantic
 
 | Token | Hex | Use |
 |---|---:|---|
-| `error-600` | `#D43E48` | definite grammar/error states |
+| `error-600` | `#B42332` | definite error states |
 | `error-50` | `#FFF0F1` | error background |
-| `warning-600` | `#C07816` | uncertainty and evidence warnings |
-| `warning-400` | `#EFA83F` | warning icon |
+| `warning-700` | `#805200` | uncertainty and evidence warnings |
 | `warning-50` | `#FFF2DF` | warning background |
-| `info-600` | `#3A65B8` | informational state and citations |
+| `info-700` | `#315B8A` | informational state and citations |
 | `info-50` | `#EEF4FF` | informational background |
 
-All text/background pairings must meet WCAG 2.2 AA. Never communicate status using color alone.
+All text/background pairings must meet WCAG 2.2 AA. Never communicate status using color alone. Saffron gold is not a text color on cream/white; pair gold fills with dark cocoa text.
 
 ## 5. Typography
 
@@ -196,7 +193,7 @@ States: idle, checking, issues, rewrite ready, error, disabled. Loading uses a s
 
 ### Mode card
 
-Contains icon, name, and one short outcome. Selected state uses `brand-100`, `brand-500` border, and a visible check. Modes must not rely on custom colors for meaning.
+Contains icon, name, and one short outcome. Selected state uses `terra-100` or `pistachio-100`, a `terra-600` border, and a visible check. Modes must not rely on custom colors for meaning.
 
 ### Rewrite comparison
 
@@ -266,7 +263,7 @@ State what is empty, why it matters, and one next action. Avoid mascots and cong
 
 - WCAG 2.2 AA contrast at minimum.
 - 44×44 px target for primary touch controls; compact desktop controls may be 32 px with adequate separation.
-- Visible 3 px focus ring using translucent brand green plus a solid inner edge.
+- Visible 3 px focus ring using translucent terracotta plus a solid inner edge.
 - Full keyboard navigation and Escape-to-close.
 - Focus returns to the invoking element after panel closure.
 - Dialogs have name, description, focus trap, and inert background.
@@ -306,7 +303,7 @@ Avoid:
 - “Guaranteed correct”
 - “Undetectable”
 - “100% human”
-- “WriteRight knows”
+- “WordSaffron knows”
 
 ### Error structure
 
@@ -345,28 +342,29 @@ The review panel becomes a bottom sheet/full inset surface. The five modes becom
 
 ```css
 :root {
-  --wr-brand-700: #08755f;
-  --wr-brand-600: #0b9377;
-  --wr-brand-500: #12ad89;
-  --wr-brand-400: #15c39a;
-  --wr-brand-100: #dff6ef;
-  --wr-brand-50: #effbf7;
-  --wr-ink-950: #172e29;
-  --wr-ink-800: #243430;
-  --wr-ink-600: #51625e;
-  --wr-ink-500: #74817e;
-  --wr-line-300: #cad3d0;
-  --wr-line-200: #dfe5e2;
-  --wr-surface-100: #f3f7f5;
-  --wr-surface-50: #fbfcfc;
-  --wr-error-600: #d43e48;
-  --wr-warning-600: #c07816;
-  --wr-info-600: #3a65b8;
-  --wr-radius-sm: 6px;
-  --wr-radius-md: 8px;
-  --wr-radius-lg: 11px;
-  --wr-radius-xl: 14px;
-  --wr-focus: 0 0 0 3px rgba(18, 173, 137, .22);
+  --ws-terra-700: #7d3424;
+  --ws-terra-600: #9c412b;
+  --ws-terra-500: #a7472d;
+  --ws-terra-100: #f3e2d9;
+  --ws-saffron-500: #d99a21;
+  --ws-saffron-700: #805200;
+  --ws-pistachio-100: #e8efdc;
+  --ws-pistachio-600: #56704c;
+  --ws-cocoa-950: #35251f;
+  --ws-cocoa-700: #493a33;
+  --ws-cocoa-600: #6b5e56;
+  --ws-paper-50: #fbf5e9;
+  --ws-white: #fffcf7;
+  --ws-line-300: #d8cabb;
+  --ws-line-200: #e9e0d4;
+  --ws-error-600: #b42332;
+  --ws-warning-700: #805200;
+  --ws-info-700: #315b8a;
+  --ws-radius-sm: 6px;
+  --ws-radius-md: 8px;
+  --ws-radius-lg: 11px;
+  --ws-radius-xl: 14px;
+  --ws-focus: 0 0 0 3px rgba(156, 65, 43, .24);
 }
 ```
 

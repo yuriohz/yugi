@@ -1,10 +1,11 @@
-# WriteRight — Engineering and Product Debrief
+# WordSaffron — Engineering and Product Debrief
 
-**Prepared:** 26 September 2026
+**Prepared:** 27 September 2026
 **Repository:** `yuriohz/yugi`
-**Working branch:** `arena/01a0dcc7-yugi`
+**Working branch:** `arena/01a0deeb-yugi`
 **Version:** 2.0.0
-**Supersedes:** the v1.0.0 debrief of the same date. §5 answers every question that version asked.
+**Public name:** WordSaffron (owner-approved 27 September 2026; tactile concept 04)
+**Supersedes:** the v2 debrief of 26 September 2026, written under the working name WriteRight. §5 answers every question the v1 version asked.
 
 ---
 
@@ -26,7 +27,7 @@ The change in kind, not degree:
 | Languages | English | British English by default, Modern Standard Arabic, Egyptian Arabic, full bidi handling |
 | Off switch | one boolean | three independent scopes with a tested zero-call guarantee |
 | Context | none | per-site adapters, twice-opt-in, previewed before sending |
-| Tests | none | 461 unit + 15 integration assertions |
+| Tests | none | 522 unit + 16 integration assertions |
 | Build | copy files into a ZIP | esbuild bundle, allow-listed package, remote-code refusal, SHA-256 |
 
 **Everything the product refuses to claim is enforced in code**: a lint rule fails the
@@ -60,7 +61,7 @@ src/content/      in-page widget, exact-range highlighting
 src/ui/           popup, options, onboarding
 ```
 
-`src/core` imports nothing from `chrome.*`. That is what makes 461 unit assertions
+`src/core` imports nothing from `chrome.*`. That is what makes 522 unit assertions
 possible without a browser, and it is the single most valuable structural decision in the
 rebuild.
 
@@ -132,12 +133,12 @@ npm run package    # validated runtime archive + SHA-256
 
 | Stage | Result |
 |---|---|
-| Lint — syntax, manifest validity, prohibited assurance claims, `console.log` ban | clean, 136 files |
+| Lint — syntax, manifest validity, prohibited assurance claims, `console.log` ban | clean, 165 files |
 | Secret scan over the whole tree | clean |
-| Build | 16 files, 204.3 kB |
-| Unit | **461 assertions, 0 failures** |
-| Integration journeys | **15, 0 failures** |
-| Package | 17 entries, 68.2 kB, allow-list enforced |
+| Build | 17 files, 420.3 kB |
+| Unit | **522 assertions, 0 failures** |
+| Integration journeys | **16, 0 failures** |
+| Package | 18 entries, 136.3 kB (`wordsaffron-ai-writing-assistant-2.0.0.zip`), allow-list enforced |
 
 The tests that matter most are the negative ones:
 
@@ -224,7 +225,7 @@ outcomes: unchanged in place; found shifted, and applied at the new offsets; or 
 uniquely locatable, and discarded**. The third case is the important one. Applying an
 approximate range edits the wrong words, which is worse than doing nothing.
 
-Undo restores the exact previous string and caret from WriteRight's own bounded stack,
+Undo restores the exact previous string and caret from WordSaffron's own bounded stack,
 because many editors clear their native undo when a value is set programmatically.
 
 ### 5.6 Do the privacy disclosures satisfy Limited Use expectations?
@@ -240,12 +241,12 @@ Whether a reviewer agrees is their call, not something this repository can asser
 
 **No, and it would make the product worse.** A proxy would create exactly the thing the
 architecture avoids: a server that sees every user's writing and holds credentials.
-"There is no WriteRight server" is a stronger privacy statement than any policy text, and
+"There is no WordSaffron server" is a stronger privacy statement than any policy text, and
 it is only true because there is no proxy.
 
 The things a proxy would have bought were solved locally instead: schema normalisation in
 `task-schemas.js`, model variation in `model-compat.js`, and abuse control is moot when
-the user pays their own OpenRouter bill.
+the user pays their own provider bill.
 
 ---
 
@@ -258,9 +259,9 @@ the user pays their own OpenRouter bill.
 | 3 | Underline precision | **Addressed for contenteditable** via the CSS Custom Highlight API, with severity colours and overlap flattening. `<input>`/`<textarea>` keep a field marker — they contain no text nodes — and the panel lists the exact text. Documented, not hidden |
 | 4 | Offset robustness | **Addressed.** See §5.5 |
 | 5 | Model compatibility | **Addressed.** See §5.3 |
-| 6 | No automated tests | **Addressed.** 461 unit + 15 integration assertions. Playwright extension tests remain impossible here for the same reason as #1 |
+| 6 | No automated tests | **Addressed.** 522 unit + 16 integration assertions. Playwright extension tests remain impossible here for the same reason as #1 |
 | 7 | Store privacy form | **Prepared.** Every answer pre-written with its basis in `docs/SUBMISSION_CHECKLIST.md` §6. The dashboard action itself needs a publisher account |
-| 8 | Support identity | **Still open.** GitHub Issues remains the contact route. Depends on the naming decision |
+| 8 | Support identity | **Still open.** GitHub Issues remains the contact route. Naming is decided (WordSaffron); launch support destination still undecided |
 
 ---
 
@@ -284,7 +285,7 @@ the user pays their own OpenRouter bill.
    model's uncited claims.
 9. **`<all_urls>`.** See §5.1.
 10. **`chrome.storage.local` is not an OS secrets vault.** See §5.2.
-11. **The public name is unresolved.** See §9.
+11. **The WordSaffron name is approved but not trademark-cleared.** See §9.
 
 ---
 
@@ -296,10 +297,9 @@ the user pays their own OpenRouter bill.
    RTL) cover behaviour that has no automated coverage at all. Sections F and G verify the
    two claims the product makes most loudly — that logic review searches nothing, and that
    a disabled extension calls nothing — in DevTools rather than in a test double.
-2. **Capture five real runtime screenshots.** The three currently in `store-assets/` are
-   mockup-derived and labelled not store-ready. Shipping a mockup as a screenshot is both
+2. **Capture five real runtime screenshots.** The three `screenshot-*` files in `store-assets/` are WordSaffron Tactile mockups, labelled not store-ready. Shipping a mockup as a screenshot is both
    a store policy violation and a false statement about the product.
-3. **Resolve the name.** See §9.
+3. **Clear the name and set up publishing.** Trademark search, domain purchase, and publisher account are all still open. See §9.
 
 Everything else is done: the package validates, the checksum is emitted, the permission
 rationale is written and machine-checked against the manifest, the privacy disclosures
@@ -311,15 +311,15 @@ through any publisher account.
 
 ---
 
-## 9. Naming — to be redone
+## 9. Naming — decided: WordSaffron
 
 Run 15 produced `NAMING_RESEARCH.md`: 42 candidates, screened against nine criteria
-including Arabic phonology, with a shortlist of **Saqel**, **Tanqih** and **Sabk**, and
-live ICANN RDAP evidence for 14 domains.
+including Arabic phonology, with live ICANN RDAP evidence for 14 domains. A 27 September
+2026 reassessment (§14) compared the strongest compounds with exact-name searches and
+fresh registrar checks, and the owner approved **WordSaffron** with tactile concept 04
+(“A pinch of clarity. Still your words.”).
 
-**This run is being redone in a separate session**, so treat the current shortlist as
-provisional input rather than a conclusion. Two things from it are worth carrying forward
-regardless:
+Two things from the research are worth carrying forward regardless:
 
 - **The method held up.** RDAP is queryable and gives real registration dates and
   registrar nameservers, which is what exposed `usewazn.com` as an active project and
@@ -327,13 +327,17 @@ regardless:
 - **The gap is real and must be closed elsewhere.** No trademark register could be queried
   from this environment — USPTO, UK IPO, EUIPO and WIPO all require JavaScript or an
   authenticated session. **No trademark search has been performed, and no claim of legal
-  clearance is made anywhere in this repository.** A redo should either run from an
-  environment with register access or hand that step to a professional.
+  clearance is made anywhere in this repository.** Commission a professional search in
+  the intended markets and software classes before public release, and recheck the
+  domain at registrar checkout (`wordsaffron.com` showed “Add to cart” on 27 September
+  2026 — a point-in-time signal only).
 
-Until a name is chosen, `src/core/constants.js` carries
-`PUBLIC_NAME_STATUS = 'provisional'` so the state is visible in the code rather than only
-in a document. The working name must not be published: its conflicts are documented in
-`NAMING_RESEARCH.md` §1.
+`src/core/constants.js` now carries `PUBLIC_NAME_STATUS = 'approved'`, and the staged
+rollout (Stages 1–4, see the addendum below) applied WordSaffron across the extension
+UI, icons, store/release copy, mockups, and live docs. The working name survives only in
+preserved technical identifiers (`writeright.settings` export format and filename,
+`window.__writeRightLoaded`, `.wr-*` selectors, `WR_*` messages) and in the historical
+record. Its conflicts are documented in `NAMING_RESEARCH.md` §1.
 
 ---
 
@@ -375,7 +379,7 @@ The v1 questions are answered in §5. These are the ones v2 raises.
    (*Supported by the provided context* / *Needs verification* / *Conflicts with the
    source*) clear enough to a non-technical user, or does it read as evasive?
 
-8. **Is 461 unit assertions the right shape of coverage?** The bias is heavily toward
+8. **Is 522 unit assertions the right shape of coverage?** The bias is heavily toward
    negative paths and refusals. Is anything important untested that is *not* blocked on a
    browser?
 
@@ -390,3 +394,35 @@ favourites, transfer and all provider disclosures are covered by regression test
 No live paid-provider call was made. Real Chrome acceptance remains outstanding;
 the attempted Playwright Chromium download was blocked by a TLS connection reset.
 All marketing images remain explicitly labelled design mockups, not runtime screenshots.
+
+
+## WordSaffron brand rollout addendum — 27 September 2026
+
+Approved direction: **WordSaffron, concept 04 — Tactile**. Executed in four stages on
+`arena/01a0deeb-yugi`; functionality, settings, provider routing, storage, and historical
+identifiers unchanged throughout.
+
+- **Stage 1 — identity.** `BRAND_GUIDELINES.md`, Tactile tokens in `DESIGN_SYSTEM.md`,
+  `WORDSAFFRON_MARKETING_COPY.md` (actual modes, provider-specific behavior, privacy
+  limits, conditional Pro disclosure), `BRAND_ALTERNATIVES.md`, and `brand-assets/`
+  SVG masters with PNG previews, including 16/32/48/128 px mark exports.
+- **Stage 2 — extension UI.** Popup, options, onboarding, in-page assistant, manifest
+  display metadata, OpenRouter `X-Title`, and runtime `icons/` (byte-identical to the
+  approved exports). `tests/unit/branding.test.js` guards the name and the preserved
+  identifiers.
+- **Stage 3 — store/release.** `STORE_LISTING.md` rewritten and reconciled with the
+  build; privacy policy (27 September 2026), permissions, submission checklist, and
+  release notes rebranded with accurate OpenRouter/Google AI Studio disclosures; all
+  five `store-assets/` SVG/PNG pairs redrawn in Tactile with the WordSaffron mark and
+  re-rendered via `@resvg/resvg-js` outside the extension package. All remain labelled
+  mockups — no runtime screenshots exist.
+- **Stage 4 — repo sweep.** README, `package.json` (`wordsaffron-extension`), build
+  comment, third-party notices, all six `design-v2/` SVG/PNG pairs, and remaining live
+  docs rebranded; historical planning bodies preserved under rename notes; this debrief
+  refreshed. Final `npm run verify`: **522/522 unit, 16/16 journeys, lint clean
+  (165 files), secret scan clean, 17-file build.**
+
+No Chrome/Chromium binary was available, so no real-browser acceptance or runtime
+captures were performed; simulated journeys are not presented as Chrome acceptance.
+The lockup typeface still needs release review. Do not merge any branding PR without
+the owner's explicit approval.

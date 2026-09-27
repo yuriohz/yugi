@@ -1,4 +1,9 @@
-# Implementation status — WriteRight v2
+# Implementation status — WordSaffron v2
+
+> **Rename note (27 September 2026):** runs 1–16 and the provider recreation below
+> were recorded under the working name WriteRight. The approved public name is now
+> **WordSaffron**. The run ledger is preserved as the historical record; the brand
+> rollout is appended at the end of this file.
 
 **Branch:** `arena/01a0dcc7-yugi`
 **Plan of record:** [`EXECUTION_PLAN.md`](EXECUTION_PLAN.md)
@@ -277,3 +282,34 @@ provided specification because the original commit/bundle was unavailable.
   failed with TLS ECONNRESET; the 16 journey tests simulate browser/network boundaries.
 - Naming appendix records confirmed collisions and distinguishes inconclusive domain
   rechecks from the earlier handoff's claims. No trademark clearance is claimed.
+
+## WordSaffron brand rollout — 27 September 2026
+
+**Branch:** `arena/01a0deeb-yugi`. Owner-approved: **WordSaffron**, tactile
+concept 04 (“A pinch of clarity. Still your words.”). No trademark clearance
+performed; no domain purchased.
+
+- **Stage 1 — identity.** `BRAND_GUIDELINES.md`, `DESIGN_SYSTEM.md` Tactile
+  tokens, `WORDSAFFRON_MARKETING_COPY.md`, `BRAND_ALTERNATIVES.md`, and the
+  `brand-assets/` SVG masters with PNG previews (mark + lockup, 16/32/48/128 px
+  mark exports). Lockup typeface still needs release review.
+- **Stage 2 — extension UI.** Popup, options, onboarding, in-page assistant,
+  manifest display metadata, OpenRouter `X-Title`, and runtime `icons/` updated
+  to WordSaffron. Preserved: `WR_*` messages, `.wr-*` selectors,
+  `window.__writeRightLoaded`, `writeright.settings` export format and filename,
+  storage keys, provider routing, and all behavior. `tests/unit/branding.test.js`
+  guards the new name and the preserved identifiers.
+- **Stage 3 — store/release.** `STORE_LISTING.md` rewritten for WordSaffron and
+  reconciled with the implementation; `PRIVACY_POLICY.md` (27 September 2026),
+  `docs/PERMISSIONS.md`, `docs/SUBMISSION_CHECKLIST.md`, `docs/RELEASE_NOTES.md`
+  rebranded with provider-accurate disclosures; all five `store-assets/` SVG/PNG
+  pairs redrawn in Tactile and re-rendered with `@resvg/resvg-js`. All store
+  images remain labelled mockups — no runtime screenshots exist.
+- **Stage 4 — repo sweep and handoff.** `README.md`, `package.json`,
+  `THIRD_PARTY_NOTICES.md`, `design-v2/` SVGs/PNGs and all remaining live docs
+  rebranded; historical planning bodies preserved with rename notes;
+  `DEBRIEF_FOR_OPUS.md` refreshed. Final `npm run verify`: **522/522 unit,
+  16/16 journey tests, lint clean, secret scan clean, 17-file build.**
+- **Still open:** real-browser acceptance (`docs/MANUAL_TEST_PLAN.md` §M),
+  five runtime screenshots, trademark clearance, domain purchase, publisher
+  account and submission. Simulated journeys are not Chrome acceptance.

@@ -31,16 +31,16 @@ export const LIMITS_MODE = Object.freeze({
  * to know it will not work.
  */
 const FORBIDDEN_INSTRUCTIONS = [
-  { re: /ignore (?:all |any )?(?:previous|prior|above|earlier|the) (?:instructions?|rules?|guardrails?|constraints?)/i, why: 'A mode cannot override WriteRight’s safety rules.' },
-  { re: /disregard (?:all |any )?(?:previous|prior|above|safety|the) /i, why: 'A mode cannot override WriteRight’s safety rules.' },
-  { re: /\byou are (?:now )?(?:no longer|not) an? editor\b/i, why: 'A mode cannot change what WriteRight is.' },
-  { re: /\b(?:invent|make up|fabricate|imagine)\b[^.\n]{0,40}\b(?:facts?|sources?|citations?|quotes?|statistics?|evidence|data)\b/i, why: 'A mode cannot ask WriteRight to invent facts, sources or evidence.' },
-  { re: /\badd\b[^.\n]{0,30}\b(?:fake|fictional|invented|made-up)\b/i, why: 'A mode cannot ask WriteRight to add invented material.' },
-  { re: /\b(?:undetectable|bypass(?:es)? ai detection|pass(?:es)? (?:as )?human|evade detection|avoid ai detect)/i, why: 'WriteRight does not claim to make writing undetectable, and a mode cannot ask it to try.' },
-  { re: /\b(?:reveal|print|output|show|repeat)\b[^.\n]{0,30}\b(?:system prompt|your instructions|api key)\b/i, why: 'A mode cannot ask WriteRight to reveal its instructions or credentials.' },
-  { re: /\bpretend (?:to be|you are)\b[^.\n]{0,40}\b(?:person|human|lawyer|doctor|accountant)\b/i, why: 'A mode cannot ask WriteRight to impersonate a real profession or person.' },
-  { re: /\bimpersonate\b/i, why: 'A mode cannot ask WriteRight to impersonate anyone.' },
-  { re: /\balways (?:say|tell)\b[^.\n]{0,30}\b(?:the user is right|they are right|yes)\b/i, why: 'WriteRight never tells the writer they are right on request.' }
+  { re: /ignore (?:all |any )?(?:previous|prior|above|earlier|the) (?:instructions?|rules?|guardrails?|constraints?)/i, why: 'A mode cannot override WordSaffron’s safety rules.' },
+  { re: /disregard (?:all |any )?(?:previous|prior|above|safety|the) /i, why: 'A mode cannot override WordSaffron’s safety rules.' },
+  { re: /\byou are (?:now )?(?:no longer|not) an? editor\b/i, why: 'A mode cannot change what WordSaffron is.' },
+  { re: /\b(?:invent|make up|fabricate|imagine)\b[^.\n]{0,40}\b(?:facts?|sources?|citations?|quotes?|statistics?|evidence|data)\b/i, why: 'A mode cannot ask WordSaffron to invent facts, sources or evidence.' },
+  { re: /\badd\b[^.\n]{0,30}\b(?:fake|fictional|invented|made-up)\b/i, why: 'A mode cannot ask WordSaffron to add invented material.' },
+  { re: /\b(?:undetectable|bypass(?:es)? ai detection|pass(?:es)? (?:as )?human|evade detection|avoid ai detect)/i, why: 'WordSaffron does not claim to make writing undetectable, and a mode cannot ask it to try.' },
+  { re: /\b(?:reveal|print|output|show|repeat)\b[^.\n]{0,30}\b(?:system prompt|your instructions|api key)\b/i, why: 'A mode cannot ask WordSaffron to reveal its instructions or credentials.' },
+  { re: /\bpretend (?:to be|you are)\b[^.\n]{0,40}\b(?:person|human|lawyer|doctor|accountant)\b/i, why: 'A mode cannot ask WordSaffron to impersonate a real profession or person.' },
+  { re: /\bimpersonate\b/i, why: 'A mode cannot ask WordSaffron to impersonate anyone.' },
+  { re: /\balways (?:say|tell)\b[^.\n]{0,30}\b(?:the user is right|they are right|yes)\b/i, why: 'WordSaffron never tells the writer they are right on request.' }
 ];
 
 export function makeCustomMode(patch = {}) {

@@ -471,7 +471,7 @@ registerTask(TASKS.TEST_MODE, ({ provider, model, plan, profile, localeLayer, mo
         fidelity: { ok: guard.fidelity.ok, warnings: guard.fidelity.warnings },
         checks: guard.evaluation.checks,
         // Stated plainly so the UI cannot present a self-assessment as a result.
-        note: 'Expectation results are the model judging its own output. The guardrail and fidelity results are checked by WriteRight.',
+        note: 'Expectation results are the model judging its own output. The guardrail and fidelity results are checked by WordSaffron.',
         passed: guard.ok && !guard.blocked
       };
     }

@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "WriteRight — AI Writing Assistant",
+  "name": "WordSaffron — AI Writing Assistant",
   "version": "2.0.0",
   "description": "Rewrite, review and proofread anywhere you type, in English or Arabic, using your own OpenRouter or Google AI Studio key.",
   "minimum_chrome_version": "114",
@@ -12,7 +12,7 @@
     "type": "module"
   },
   "action": {
-    "default_title": "WriteRight",
+    "default_title": "WordSaffron",
     "default_popup": "popup.html"
   },
   "content_scripts": [

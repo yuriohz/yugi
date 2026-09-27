@@ -1,4 +1,8 @@
-# WriteRight v2 product and implementation plan
+# WordSaffron v2 product and implementation plan
+
+> **Rename note (27 September 2026):** this plan was written under the working name
+> WriteRight. The approved public name is now **WordSaffron**. The body below is
+> preserved as the historical record and still uses the working name.
 
 **Status:** design proposal for approval  
 **Date:** September 26, 2026  

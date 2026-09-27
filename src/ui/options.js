@@ -90,7 +90,7 @@ function renderModes() {
       const edit = document.createElement('button');
       edit.type = 'button';
       edit.textContent = 'Edit';
-      edit.style.color = '#0b9377';
+      edit.style.color = '#7D3424';
       edit.addEventListener('click', () => {
         editingModeId = mode.id;
         $('modeName').value = mode.name;
@@ -131,7 +131,7 @@ function renderPrompts() {
     const edit = document.createElement('button');
     edit.type = 'button';
     edit.textContent = 'Edit';
-    edit.style.color = '#0b9377';
+    edit.style.color = '#7D3424';
     edit.addEventListener('click', () => {
       editingPromptId = prompt.id;
       $('promptName').value = prompt.name;
@@ -379,7 +379,7 @@ $('testMode').addEventListener('click', async () => {
     const out = $('modeTestOut');
     out.hidden = false;
     out.textContent = result.result?.output || JSON.stringify(result.result, null, 2);
-    setStatus('modeStatus', 'Test finished. Check the output below — WriteRight, not the model, decides whether it passed.');
+    setStatus('modeStatus', 'Test finished. Check the output below — WordSaffron, not the model, decides whether it passed.');
   } catch (error) {
     setStatus('modeStatus', error.message, false);
   }
