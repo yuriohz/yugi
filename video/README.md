@@ -3,11 +3,15 @@
 A 35.6-second launch film for the WordSaffron Chrome extension, rendered **entirely from
 JavaScript** — no After Effects, no Premiere, no video templates.
 
+The finished film is committed at [`film/wordsaffron-launch.mp4`](film/wordsaffron-launch.mp4)
+(1080p, ~12 MB), with a 12-frame [`contact sheet`](film/contact-sheet.png) for review.
+`out/` is scratch and is not tracked.
+
 ```bash
 cd video
 npm install
 npm run audio     # trims the VO, composes the score, mixes → out/audio.wav
-npm run video     # renders every frame → out/wordsaffron-launch.mp4
+npm run video     # renders every frame → film/wordsaffron-launch.mp4
 ```
 
 ## What it is
@@ -67,7 +71,7 @@ narration stays consistent. The mode names in `06.mp3` are detected by silence s
 node src/check.js                       # every text node inside the frame? luminance sane?
 node src/preview.js 13.4                # ASCII luminance map of a frame
 node src/preview.js 14.6 --crop 990,240,720,400   # zoom into a region
-node src/render.js --sheet              # contact sheet of 12 key frames
+npm run sheet                           # contact sheet of 12 key frames → out/contact-sheet.png
 ```
 
 ## Brand and legal notes
